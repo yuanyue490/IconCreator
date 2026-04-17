@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IconCraft · AI 图标工作台</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cal+Sans&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Iconify -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Cal Sans"', 'Inter', 'system-ui', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root { color-scheme: dark; }
+
+    html, body {
+      background-color: #0a0a0a;
+      color: #fafafa;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .font-display {
+      font-family: 'Cal Sans', 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    /* ---------- 通用 ---------- */
+    .is-hidden { display: none !important; }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* ---------- 表面 ---------- */
+    .surface {
+      background: #141414;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .surface-raised {
+      background: #181818;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .surface-elevated {
+      background: #1c1c1c;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 28px rgba(0, 0, 0, 0.5);
+    }
+
+    /* ---------- 按钮 ---------- */
+    .btn-primary {
+      background: #fafafa;
+      color: #0a0a0a;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+    .btn-primary:hover { background: #e8e8e8; }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: #fafafa;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+      transition: all 0.18s ease;
+    }
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+
+    .btn-subtle {
+      background: transparent;
+      color: #8a8a8a;
+      transition: all 0.15s ease;
+    }
+    .btn-subtle:hover {
+      color: #fafafa;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* ---------- 胶囊 ---------- */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      font-size: 12.5px;
+      color: #8a8a8a;
+      background: transparent;
+      border-radius: 9999px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .chip:hover {
+      color: #fafafa;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+    }
+    .chip.is-active {
+      color: #0a0a0a;
+      background: #fafafa;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    /* ---------- 模式 Segmented ---------- */
+    .mode-seg {
+      position: relative;
+      display: inline-flex;
+      padding: 4px;
+      background: #111;
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    .mode-seg button {
+      position: relative;
+      z-index: 1;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #8a8a8a;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: color 0.18s ease;
+    }
+    .mode-seg button.is-active {
+      color: #0a0a0a;
+      background: #fafafa;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    /* ---------- 输入 ---------- */
+    .input-shell {
+      background: #111;
+      border-radius: 16px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      transition: box-shadow 0.18s ease;
+    }
+    .input-shell:focus-within {
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+        0 0 0 4px rgba(255, 255, 255, 0.04);
+    }
+    textarea.input-area,
+    input.input-plain {
+      background: transparent;
+      color: #fafafa;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      resize: none;
+      font-family: inherit;
+    }
+    textarea.input-area::placeholder,
+    input.input-plain::placeholder {
+      color: #5a5a5a;
+    }
+
+    /* ---------- 骨架 ---------- */
+    @keyframes shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        #161616 0%, #1e1e1e 50%, #161616 100%
+      );
+      background-size: 800px 100%;
+      animation: shimmer 1.6s linear infinite;
+    }
+
+    /* ---------- AI 3D 结果卡 ---------- */
+    .mock-icon {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 72px;
+      border-radius: 20px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 10px 24px rgba(0, 0, 0, 0.5);
+    }
+    .mock-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at 30% 20%,
+        rgba(255, 255, 255, 0.22),
+        transparent 55%
+      );
+      pointer-events: none;
+    }
+    .mock-icon-1 { background: linear-gradient(135deg, #3b3b54 0%, #1a1a2a 100%); }
+    .mock-icon-2 { background: linear-gradient(135deg, #4a3a5c 0%, #1f1a2a 100%); }
+    .mock-icon-3 { background: linear-gradient(135deg, #5c3a3a 0%, #2a1a1a 100%); }
+    .mock-icon-4 { background: linear-gradient(135deg, #3a5c4a 0%, #1a2a20 100%); }
+
+    .result-card { position: relative; border-radius: 20px; overflow: hidden; }
+    .result-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%);
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 8px; padding: 12px; opacity: 0; transition: opacity 0.18s ease;
+    }
+    .result-card:hover .result-overlay { opacity: 1; }
+    .overlay-btn {
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 10px;
+      background: rgba(250, 250, 250, 0.95);
+      color: #0a0a0a; font-size: 16px;
+      transition: transform 0.12s ease;
+    }
+    .overlay-btn:hover { transform: translateY(-2px); }
+
+    /* ---------- 匹配结果行 ---------- */
+    .match-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 1fr 140px;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 16px;
+      border-radius: 12px;
+      transition: background 0.15s ease;
+    }
+    .match-row:hover { background: rgba(255, 255, 255, 0.03); }
+    .match-row + .match-row { margin-top: 2px; }
+
+    .match-icon-box {
+      width: 40px; height: 40px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #0e0e0e;
+      color: #fafafa;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    .match-icon-box iconify-icon { font-size: 22px; }
+
+    .match-row.is-unmatched .match-icon-box {
+      color: #5a5a5a;
+      background: #0c0c0c;
+    }
+    .match-row.is-unmatched .match-word { color: #8a8a8a; }
+    .match-row.is-unmatched .match-name-text {
+      color: #5a5a5a;
+      font-style: italic;
+    }
+
+    .match-row .row-actions {
+      display: flex; gap: 4px; justify-content: flex-end;
+      opacity: 0.4; transition: opacity 0.15s ease;
+    }
+    .match-row:hover .row-actions { opacity: 1; }
+
+    .row-action-btn {
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #8a8a8a;
+      border-radius: 6px;
+      transition: all 0.12s ease;
+    }
+    .row-action-btn:hover {
+      color: #fafafa;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* ---------- 图标库网格（浏览模式）---------- */
+    .icon-cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1 / 1;
+      background: #131313;
+      color: #c8c8c8;
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .icon-cell:hover {
+      background: #1a1a1a;
+      color: #fafafa;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+        0 6px 16px rgba(0, 0, 0, 0.45);
+      transform: translateY(-1px);
+    }
+    .icon-cell iconify-icon { font-size: 26px; }
+
+    /* ---------- 下拉 ---------- */
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      min-width: 220px;
+      padding: 6px;
+      border-radius: 12px;
+      z-index: 20;
+    }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: #d0d0d0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .dropdown-item:hover {
+      color: #fafafa;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .dropdown-item .label-badge {
+      font-size: 11px;
+      color: #5a5a5a;
+      margin-left: auto;
+    }
+
+    /* ---------- Modal ---------- */
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    /* ---------- Toast ---------- */
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 10px 18px;
+      background: #fafafa; color: #0a0a0a;
+      font-size: 13px; font-weight: 500;
+      border-radius: 9999px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+      opacity: 0; pointer-events: none;
+      transition: all 0.24s ease;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ---------- 滚动条 ---------- */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 999px;
+      border: 2px solid #0a0a0a;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+    /* ---------- 词 chip（匹配模式输入解析）---------- */
+    .word-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px;
+      font-size: 12px;
+      color: #d0d0d0;
+      background: #1f1f1f;
+      border-radius: 6px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    /* 动画 */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fadeInUp 0.28s ease both; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <!-- ============================= -->
+  <!-- 顶部导航（细边工具栏）        -->
+  <!-- ============================= -->
+  <header class="h-12 flex items-center justify-between px-6 border-b border-white/5">
+    <!-- 左：Logo -->
+    <div class="flex items-center gap-6">
+      <a href="#" class="flex items-center gap-2 group">
+        <span
+          class="w-7 h-7 rounded-md bg-white text-black flex items-center justify-center font-display text-[15px]"
+        >I</span>
+        <span class="font-display text-[15px]">IconCraft</span>
+        <span class="text-[11px] text-[#5a5a5a] font-mono ml-1">v0.1</span>
+      </a>
+    </div>
+
+    <!-- 右：辅助入口 -->
+    <div class="flex items-center gap-1">
+      <button
+        class="btn-subtle h-8 px-3 rounded-md text-[12.5px] inline-flex items-center gap-1.5"
+        onclick="openBrowse()"
+      >
+        <iconify-icon icon="lucide:library-big" class="text-[14px]"></iconify-icon>
+        浏览全部
+      </button>
+      <button
+        class="btn-subtle h-8 px-3 rounded-md text-[12.5px] inline-flex items-center gap-1.5"
+      >
+        <iconify-icon icon="lucide:history" class="text-[14px]"></iconify-icon>
+        历史
+      </button>
+      <div class="w-px h-5 bg-white/10 mx-1"></div>
+      <a
+        href="#"
+        class="btn-subtle h-8 w-8 rounded-md inline-flex items-center justify-center"
+        title="GitHub"
+      >
+        <iconify-icon icon="lucide:github" class="text-[15px]"></iconify-icon>
+      </a>
+      <button class="btn-subtle h-8 px-3 rounded-md text-[12.5px]">登录</button>
+    </div>
+  </header>
+
+  <!-- ============================= -->
+  <!-- 主工作台（打开即见）         -->
+  <!-- ============================= -->
+  <main id="workbench" class="max-w-[920px] mx-auto px-6 pt-10 pb-24">
+    <!-- 工作台卡片 -->
+    <div class="surface-raised rounded-2xl p-5">
+      <!-- 模式切换 -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="mode-seg" id="mode-seg">
+          <button data-mode="ai" class="is-active">
+            <iconify-icon icon="lucide:sparkles" class="text-[14px]"></iconify-icon>
+            AI 生成
+          </button>
+          <button data-mode="match">
+            <iconify-icon icon="lucide:layers" class="text-[14px]"></iconify-icon>
+            组匹配
+          </button>
+        </div>
+        <div class="text-[11.5px] text-[#5a5a5a]" id="mode-hint">
+          输入对象名称，AI 生成 4 张 3D 风格候选图
+        </div>
+      </div>
+
+      <!-- 输入框 -->
+      <div class="input-shell px-4 py-3">
+        <!-- AI 模式输入 -->
+        <textarea
+          id="input-ai"
+          class="input-area text-[15px] leading-[1.5]"
+          rows="1"
+          placeholder="输入对象名称，如 咖啡杯 / 火箭 / 文件夹 / 相机"
+        ></textarea>
+        <!-- 匹配模式输入 -->
+        <textarea
+          id="input-match"
+          class="input-area text-[15px] leading-[1.5] is-hidden"
+          rows="2"
+          placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：首页 消息 设置 搜索 用户 退出"
+        ></textarea>
+      </div>
+
+      <!-- 参数区 + 提交 -->
+      <div class="mt-3 flex items-center justify-between gap-3 flex-wrap">
+        <!-- AI 模式参数 -->
+        <div id="params-ai" class="flex items-center gap-2 flex-wrap">
+          <span class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider mr-1">风格</span>
+          <div id="style-chips" class="flex items-center gap-1.5 flex-wrap">
+            <button class="chip is-active" data-style="minimal">极简主义</button>
+            <button class="chip" data-style="glass">玻璃拟态</button>
+            <button class="chip" data-style="clay">粘土风格</button>
+            <button class="chip" data-style="cyber">赛博朋克</button>
+            <button class="chip" data-style="metal">金属质感</button>
+          </div>
+          <button
+            class="btn-subtle h-7 px-2 rounded-md text-[11.5px] inline-flex items-center gap-1"
+            id="advanced-toggle"
+          >
+            <iconify-icon icon="lucide:sliders-horizontal" class="text-[12px]"></iconify-icon>
+            高级
+          </button>
+        </div>
+
+        <!-- 匹配模式参数 -->
+        <div id="params-match" class="is-hidden flex items-center gap-2 flex-wrap">
+          <!-- 库选择 -->
+          <div class="relative">
+            <button
+              class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-2"
+              id="library-btn"
+            >
+              <iconify-icon icon="lucide:library" class="text-[13px]"></iconify-icon>
+              <span id="library-label">Lucide</span>
+              <span class="text-[#5a5a5a]">·</span>
+              <span id="style-label">线性</span>
+              <iconify-icon icon="lucide:chevron-down" class="text-[11px] text-[#5a5a5a]"></iconify-icon>
+            </button>
+            <div
+              id="library-dropdown"
+              class="dropdown surface-elevated is-hidden"
+            >
+              <div class="dropdown-item" data-lib="lucide" data-style="linear">
+                <iconify-icon icon="lucide:minus" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>
+                  <div>Lucide · 线性</div>
+                </div>
+                <span class="label-badge">1,400 图标</span>
+              </div>
+              <div class="dropdown-item" data-lib="heroicons" data-style="linear">
+                <iconify-icon icon="lucide:minus" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>Heroicons · 线性</div>
+                <span class="label-badge">300 图标</span>
+              </div>
+              <div class="dropdown-item" data-lib="heroicons" data-style="solid">
+                <iconify-icon icon="lucide:circle" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>Heroicons · 填充</div>
+                <span class="label-badge">300 图标</span>
+              </div>
+              <div class="dropdown-item" data-lib="ph" data-style="regular">
+                <iconify-icon icon="lucide:minus" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>Phosphor · 常规</div>
+                <span class="label-badge">6,000 图标</span>
+              </div>
+              <div class="dropdown-item" data-lib="ph" data-style="duotone">
+                <iconify-icon icon="lucide:layers" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>Phosphor · 双色</div>
+                <span class="label-badge">6,000 图标</span>
+              </div>
+              <div class="dropdown-item" data-lib="tabler" data-style="linear">
+                <iconify-icon icon="lucide:minus" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                <div>Tabler · 线性</div>
+                <span class="label-badge">4,000 图标</span>
+              </div>
+            </div>
+          </div>
+          <button
+            class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5"
+            onclick="showToast('AI 正在根据输入推荐最佳库...')"
+          >
+            <iconify-icon icon="lucide:wand-sparkles" class="text-[13px]"></iconify-icon>
+            AI 帮我选
+          </button>
+          <span class="text-[11.5px] text-[#5a5a5a]">上限 20 词</span>
+        </div>
+
+        <!-- 提交按钮 -->
+        <button
+          id="submit-btn"
+          class="btn-primary h-9 px-5 rounded-lg text-[13.5px] inline-flex items-center gap-2"
+        >
+          <iconify-icon icon="lucide:arrow-right" class="text-[15px]" id="submit-icon"></iconify-icon>
+          <span id="submit-label">生成 4 张</span>
+        </button>
+      </div>
+
+      <!-- 高级选项（AI 模式）-->
+      <div id="advanced-panel" class="is-hidden mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-5">
+        <div>
+          <div class="text-[11.5px] text-[#5a5a5a] mb-2 uppercase tracking-wider">颜色倾向</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="chip is-active">自动</button>
+            <button class="chip">暖色调</button>
+            <button class="chip">冷色调</button>
+            <button class="chip">单色</button>
+            <button class="chip">彩虹</button>
+          </div>
+        </div>
+        <div>
+          <div class="text-[11.5px] text-[#5a5a5a] mb-2 uppercase tracking-wider">视角</div>
+          <div class="flex flex-wrap gap-1.5">
+            <button class="chip is-active">等轴测</button>
+            <button class="chip">正面</button>
+            <button class="chip">俯视</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================= -->
+    <!-- 输出区                        -->
+    <!-- ============================= -->
+    <section class="mt-6" id="output">
+      <!-- ---- 空态（AI 模式）---- -->
+      <div id="empty-ai" class="output-state">
+        <div class="text-[12px] text-[#5a5a5a] mb-3 uppercase tracking-wider">试试这些</div>
+        <div class="flex flex-wrap gap-2">
+          <button class="example-pill chip" data-fill-ai="咖啡杯">
+            <iconify-icon icon="lucide:coffee" class="text-[12px]"></iconify-icon>
+            咖啡杯
+          </button>
+          <button class="example-pill chip" data-fill-ai="火箭">
+            <iconify-icon icon="lucide:rocket" class="text-[12px]"></iconify-icon>
+            火箭
+          </button>
+          <button class="example-pill chip" data-fill-ai="相机">
+            <iconify-icon icon="lucide:camera" class="text-[12px]"></iconify-icon>
+            相机
+          </button>
+          <button class="example-pill chip" data-fill-ai="耳机">
+            <iconify-icon icon="lucide:headphones" class="text-[12px]"></iconify-icon>
+            耳机
+          </button>
+          <button class="example-pill chip" data-fill-ai="地球">
+            <iconify-icon icon="lucide:globe" class="text-[12px]"></iconify-icon>
+            地球
+          </button>
+          <button class="example-pill chip" data-fill-ai="礼物盒">
+            <iconify-icon icon="lucide:gift" class="text-[12px]"></iconify-icon>
+            礼物盒
+          </button>
+        </div>
+      </div>
+
+      <!-- ---- 空态（匹配模式）---- -->
+      <div id="empty-match" class="output-state is-hidden">
+        <div class="text-[12px] text-[#5a5a5a] mb-3 uppercase tracking-wider">试试这些场景</div>
+        <div class="grid grid-cols-3 gap-3">
+          <button
+            class="example-group surface rounded-xl p-4 text-left hover:bg-white/[0.02] transition-colors"
+            data-fill-match="首页 消息 设置 搜索 用户 退出"
+          >
+            <div class="flex items-center gap-1.5 mb-2 text-[#8a8a8a]">
+              <iconify-icon icon="lucide:layout-dashboard" class="text-[14px]"></iconify-icon>
+              <span class="text-[12px] uppercase tracking-wider">导航栏</span>
+            </div>
+            <div class="text-[13px] text-[#d0d0d0] leading-relaxed">
+              首页 消息 设置 搜索 用户 退出
+            </div>
+            <div class="text-[11px] text-[#5a5a5a] mt-2">6 个图标</div>
+          </button>
+
+          <button
+            class="example-group surface rounded-xl p-4 text-left hover:bg-white/[0.02] transition-colors"
+            data-fill-match="购物车 收藏 支付 订单 物流 客服 评价"
+          >
+            <div class="flex items-center gap-1.5 mb-2 text-[#8a8a8a]">
+              <iconify-icon icon="lucide:shopping-bag" class="text-[14px]"></iconify-icon>
+              <span class="text-[12px] uppercase tracking-wider">电商流程</span>
+            </div>
+            <div class="text-[13px] text-[#d0d0d0] leading-relaxed">
+              购物车 收藏 支付 订单 物流 客服 评价
+            </div>
+            <div class="text-[11px] text-[#5a5a5a] mt-2">7 个图标</div>
+          </button>
+
+          <button
+            class="example-group surface rounded-xl p-4 text-left hover:bg-white/[0.02] transition-colors"
+            data-fill-match="点赞 评论 分享 关注 收藏 转发"
+          >
+            <div class="flex items-center gap-1.5 mb-2 text-[#8a8a8a]">
+              <iconify-icon icon="lucide:message-circle" class="text-[14px]"></iconify-icon>
+              <span class="text-[12px] uppercase tracking-wider">社交互动</span>
+            </div>
+            <div class="text-[13px] text-[#d0d0d0] leading-relaxed">
+              点赞 评论 分享 关注 收藏 转发
+            </div>
+            <div class="text-[11px] text-[#5a5a5a] mt-2">6 个图标</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ---- AI 加载态 ---- -->
+      <div id="loading-ai" class="output-state is-hidden">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/60 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span class="text-[13px] text-[#8a8a8a]">
+              生成中 · 预估 <span class="text-white font-medium" id="eta">28</span> 秒
+            </span>
+          </div>
+          <div class="text-[11.5px] text-[#5a5a5a] font-mono">
+            SeeDream v1.2 · 1024×1024 · CFG 8
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-4">
+          <div class="aspect-square rounded-2xl skeleton"></div>
+          <div class="aspect-square rounded-2xl skeleton"></div>
+          <div class="aspect-square rounded-2xl skeleton"></div>
+          <div class="aspect-square rounded-2xl skeleton"></div>
+        </div>
+      </div>
+
+      <!-- ---- AI 结果态 ---- -->
+      <div id="result-ai" class="output-state is-hidden animate-in">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="text-[15px]">
+              "<span id="ai-result-object" class="font-medium">咖啡杯</span>"
+              <span class="text-[#5a5a5a] mx-1">·</span>
+              <span class="text-[#8a8a8a]">极简主义</span>
+            </div>
+            <div class="text-[11.5px] text-[#5a5a5a] mt-0.5">耗时 26 秒 · 4 张候选</div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5">
+              <iconify-icon icon="lucide:copy" class="text-[13px]"></iconify-icon>
+              复制提示词
+            </button>
+            <button
+              class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5"
+              onclick="runAI()"
+            >
+              <iconify-icon icon="lucide:refresh-cw" class="text-[13px]"></iconify-icon>
+              重新生成
+            </button>
+            <button
+              class="btn-primary h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5"
+              onclick="showToast('已打包下载 4 张图标')"
+            >
+              <iconify-icon icon="lucide:download" class="text-[13px]"></iconify-icon>
+              下载全部
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4">
+          <div class="result-card">
+            <div class="mock-icon mock-icon-1 aspect-square"><span class="relative z-10">☕</span></div>
+            <div class="result-overlay">
+              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+            </div>
+          </div>
+          <div class="result-card">
+            <div class="mock-icon mock-icon-2 aspect-square"><span class="relative z-10">☕</span></div>
+            <div class="result-overlay">
+              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+            </div>
+          </div>
+          <div class="result-card">
+            <div class="mock-icon mock-icon-3 aspect-square"><span class="relative z-10">☕</span></div>
+            <div class="result-overlay">
+              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+            </div>
+          </div>
+          <div class="result-card">
+            <div class="mock-icon mock-icon-4 aspect-square"><span class="relative z-10">☕</span></div>
+            <div class="result-overlay">
+              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
+              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提示词 -->
+        <div class="surface rounded-xl p-3.5 mt-4 flex items-start gap-3">
+          <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5"></iconify-icon>
+          <div class="flex-1 min-w-0">
+            <div class="text-[11px] text-[#5a5a5a] mb-1 uppercase tracking-wider">使用的提示词</div>
+            <div class="text-[12.5px] text-[#a0a0a0] leading-relaxed font-mono">
+              A 3D rendered icon of <span class="text-white">coffee cup</span>,
+              isometric view, clean minimalist style, soft gradient lighting, pastel
+              color scheme, floating on solid background, studio quality, 4K.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- 匹配加载态 ---- -->
+      <div id="loading-match" class="output-state is-hidden">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/60 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+          </span>
+          <span class="text-[13px] text-[#8a8a8a]" id="match-progress-text">
+            AI 正在分析词语语义...
+          </span>
+        </div>
+        <div class="surface rounded-xl p-2">
+          <div class="match-row">
+            <div class="skeleton w-10 h-10 rounded-lg"></div>
+            <div class="skeleton h-4 rounded" style="width: 60%;"></div>
+            <div class="skeleton h-4 rounded" style="width: 50%;"></div>
+            <div></div>
+          </div>
+          <div class="match-row">
+            <div class="skeleton w-10 h-10 rounded-lg"></div>
+            <div class="skeleton h-4 rounded" style="width: 50%;"></div>
+            <div class="skeleton h-4 rounded" style="width: 60%;"></div>
+            <div></div>
+          </div>
+          <div class="match-row">
+            <div class="skeleton w-10 h-10 rounded-lg"></div>
+            <div class="skeleton h-4 rounded" style="width: 55%;"></div>
+            <div class="skeleton h-4 rounded" style="width: 45%;"></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- 匹配结果态 ---- -->
+      <div id="result-match" class="output-state is-hidden animate-in">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2 flex-wrap text-[12.5px]">
+            <span class="text-[#5a5a5a]">来源</span>
+            <span class="font-medium">Lucide · 线性</span>
+            <span class="text-[#5a5a5a]">·</span>
+            <span class="text-[#5a5a5a]">匹配</span>
+            <span class="font-medium"><span id="match-success">5</span>/<span id="match-total">6</span></span>
+            <span class="text-[#5a5a5a]">·</span>
+            <span class="text-[#5a5a5a]">耗时 <span class="font-mono text-[#a0a0a0]">1.8s</span></span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5" onclick="runMatch()">
+              <iconify-icon icon="lucide:refresh-cw" class="text-[13px]"></iconify-icon>
+              重新匹配
+            </button>
+            <div class="relative">
+              <button
+                class="btn-primary h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5"
+                id="download-all-btn"
+              >
+                <iconify-icon icon="lucide:download" class="text-[13px]"></iconify-icon>
+                下载全部
+                <iconify-icon icon="lucide:chevron-down" class="text-[11px]"></iconify-icon>
+              </button>
+              <div id="download-dropdown" class="dropdown surface-elevated is-hidden" style="right: 0; min-width: 240px;">
+                <div class="dropdown-item" onclick="showToast('已打包 SVG ZIP')">
+                  <iconify-icon icon="lucide:file-code-2" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>SVG · ZIP 打包</div>
+                  <span class="label-badge">推荐</span>
+                </div>
+                <div class="dropdown-item" onclick="showToast('已生成 SVG Sprite')">
+                  <iconify-icon icon="lucide:combine" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>SVG Sprite · 单文件</div>
+                </div>
+                <div class="dropdown-item" onclick="showToast('已打包 PNG ZIP')">
+                  <iconify-icon icon="lucide:image" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>PNG · ZIP（48px）</div>
+                </div>
+                <div class="dropdown-item" onclick="showToast('已生成 React 组件集')">
+                  <iconify-icon icon="simple-icons:react" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>React 组件集</div>
+                </div>
+                <div class="dropdown-item" onclick="showToast('已生成 Vue 组件集')">
+                  <iconify-icon icon="simple-icons:vuedotjs" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>Vue 组件集</div>
+                </div>
+                <div class="divider my-1"></div>
+                <div class="dropdown-item" onclick="showToast('已复制所有 SVG')">
+                  <iconify-icon icon="lucide:copy" class="text-[14px] text-[#8a8a8a]"></iconify-icon>
+                  <div>复制所有 SVG 代码</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 匹配列表 -->
+        <div class="surface rounded-xl p-2" id="match-list">
+          <!-- 行由 JS 渲染 -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================= -->
+  <!-- 浏览模式（二级页面）          -->
+  <!-- ============================= -->
+  <main id="browse" class="is-hidden">
+    <section class="border-b border-white/5">
+      <div class="max-w-[1280px] mx-auto px-6 py-4 flex items-center gap-3">
+        <button
+          class="btn-subtle h-8 px-2.5 rounded-md text-[12.5px] inline-flex items-center gap-1.5"
+          onclick="closeBrowse()"
+        >
+          <iconify-icon icon="lucide:arrow-left" class="text-[14px]"></iconify-icon>
+          返回工作台
+        </button>
+        <div class="w-px h-5 bg-white/10"></div>
+        <div class="flex-1 relative">
+          <iconify-icon
+            icon="lucide:search"
+            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#5a5a5a] text-[15px]"
+          ></iconify-icon>
+          <input
+            type="text"
+            class="input-plain h-9 pl-10 pr-3 rounded-lg text-[13.5px] w-full"
+            style="background: #111; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);"
+            placeholder="搜索 200,000+ 开源图标"
+          />
+        </div>
+        <button class="btn-ghost h-9 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5">
+          所有库 <iconify-icon icon="lucide:chevron-down" class="text-[11px]"></iconify-icon>
+        </button>
+        <button class="btn-ghost h-9 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5">
+          风格 <iconify-icon icon="lucide:chevron-down" class="text-[11px]"></iconify-icon>
+        </button>
+      </div>
+    </section>
+
+    <section class="max-w-[1280px] mx-auto px-6 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-[12.5px] text-[#8a8a8a]">
+          共 <span class="text-white font-medium">48,213</span> 个图标 · 6 个图标库
+        </div>
+        <div class="text-[11.5px] text-[#5a5a5a]">提示：工作台的"组匹配"模式更适合批量场景</div>
+      </div>
+      <div
+        id="icon-grid"
+        class="grid gap-2.5"
+        style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));"
+      ></div>
+    </section>
+  </main>
+
+  <!-- ============================= -->
+  <!-- 图标详情 Modal                -->
+  <!-- ============================= -->
+  <div
+    id="icon-modal"
+    class="fixed inset-0 z-50 is-hidden flex items-center justify-center p-6"
+  >
+    <div class="modal-backdrop absolute inset-0" onclick="closeIconModal()"></div>
+    <div class="surface-elevated relative w-full max-w-[860px] rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-white/5">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-lg flex items-center justify-center"
+            style="background: #0e0e0e; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);"
+          >
+            <iconify-icon id="modal-icon-sm" icon="lucide:rocket" class="text-[18px]"></iconify-icon>
+          </div>
+          <div>
+            <div class="font-display text-[16px]" id="modal-name">rocket</div>
+            <div class="flex items-center gap-1.5 mt-0.5 text-[11.5px] text-[#5a5a5a]">
+              <span id="modal-pack">Lucide Icons</span>
+              <span>·</span>
+              <span>ISC License</span>
+            </div>
+          </div>
+        </div>
+        <button
+          class="btn-subtle w-8 h-8 rounded-md inline-flex items-center justify-center"
+          onclick="closeIconModal()"
+        >
+          <iconify-icon icon="lucide:x" class="text-[16px]"></iconify-icon>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-5">
+        <div class="col-span-2 p-6" style="background: #0e0e0e;">
+          <div
+            class="rounded-xl flex items-center justify-center relative overflow-hidden"
+            style="min-height: 240px;
+              background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+              background-size: 16px 16px;
+              box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);"
+          >
+            <iconify-icon id="modal-preview" icon="lucide:rocket" class="text-white" style="font-size: 140px;"></iconify-icon>
+          </div>
+          <div class="mt-4">
+            <div class="flex items-center justify-between text-[11.5px] mb-1.5">
+              <span class="text-[#5a5a5a] uppercase tracking-wider">预览</span>
+              <span class="text-white font-mono" id="size-label">140 px</span>
+            </div>
+            <input
+              id="size-slider"
+              type="range"
+              min="32"
+              max="220"
+              value="140"
+              class="w-full accent-white"
+            />
+          </div>
+        </div>
+
+        <div class="col-span-3 p-5 flex flex-col">
+          <div class="mode-seg self-start mb-4" style="padding: 3px;">
+            <button class="is-active" data-fmt="svg">SVG</button>
+            <button data-fmt="png">PNG</button>
+            <button data-fmt="react">React</button>
+            <button data-fmt="vue">Vue</button>
+          </div>
+
+          <div class="flex-1 min-h-0 flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] text-[#5a5a5a] uppercase tracking-wider">代码</span>
+              <button
+                class="btn-subtle h-6 px-2 rounded text-[11.5px] inline-flex items-center gap-1"
+                onclick="showToast('已复制到剪贴板')"
+              >
+                <iconify-icon icon="lucide:copy" class="text-[12px]"></iconify-icon>
+                复制
+              </button>
+            </div>
+            <pre
+              id="code-block"
+              class="flex-1 p-3.5 rounded-xl font-mono text-[12px] text-[#a0a0a0] leading-relaxed overflow-auto whitespace-pre"
+              style="background: #0e0e0e; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);"
+            ></pre>
+          </div>
+
+          <div class="mt-4 flex items-center gap-2">
+            <button
+              class="btn-primary flex-1 h-10 rounded-lg text-[13px] inline-flex items-center justify-center gap-2"
+              onclick="showToast('开始下载...')"
+            >
+              <iconify-icon icon="lucide:download" class="text-[14px]"></iconify-icon>
+              下载
+            </button>
+            <button
+              class="btn-ghost h-10 w-10 rounded-lg inline-flex items-center justify-center"
+              onclick="showToast('已加入收藏')"
+            >
+              <iconify-icon icon="lucide:heart" class="text-[14px]"></iconify-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">操作成功</div>
+
+  <!-- ============================= -->
+  <!-- 脚本                          -->
+  <!-- ============================= -->
+  <script>
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+    function showToast(text) {
+      const el = $('#toast');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    // ============= 模式切换 =============
+    let currentMode = 'ai';
+    const modeButtons = $$('#mode-seg button');
+    const modeHint = {
+      ai: '输入对象名称，AI 生成 4 张 3D 风格候选图',
+      match: '输入一组词，AI 匹配同库同款图标组（上限 20 个）',
+    };
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentMode = btn.dataset.mode;
+        modeButtons.forEach((b) => b.classList.toggle('is-active', b === btn));
+        $('#mode-hint').textContent = modeHint[currentMode];
+        // 输入区
+        $('#input-ai').classList.toggle('is-hidden', currentMode !== 'ai');
+        $('#input-match').classList.toggle('is-hidden', currentMode !== 'match');
+        // 参数区
+        $('#params-ai').classList.toggle('is-hidden', currentMode !== 'ai');
+        $('#params-match').classList.toggle('is-hidden', currentMode !== 'match');
+        // 按钮文案
+        if (currentMode === 'ai') {
+          $('#submit-label').textContent = '生成 4 张';
+          $('#submit-icon').setAttribute('icon', 'lucide:sparkles');
+        } else {
+          $('#submit-label').textContent = '匹配图标';
+          $('#submit-icon').setAttribute('icon', 'lucide:layers');
+        }
+        // 输出区切换为对应空态
+        switchOutput(`empty-${currentMode}`);
+        // 关闭高级面板
+        $('#advanced-panel').classList.add('is-hidden');
+      });
+    });
+
+    // ============= 输出区状态切换 =============
+    function switchOutput(id) {
+      $$('.output-state').forEach((el) =>
+        el.classList.toggle('is-hidden', el.id !== id),
+      );
+    }
+
+    // ============= AI 模式：风格 chip =============
+    $$('#style-chips .chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        $$('#style-chips .chip').forEach((c) => c.classList.remove('is-active'));
+        chip.classList.add('is-active');
+      });
+    });
+
+    // 高级选项里的 chip（每组独立）
+    $$('#advanced-panel > div').forEach((group) => {
+      group.addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        $$('.chip', group).forEach((c) => c.classList.remove('is-active'));
+        chip.classList.add('is-active');
+      });
+    });
+
+    // 高级选项开关
+    $('#advanced-toggle').addEventListener('click', () => {
+      $('#advanced-panel').classList.toggle('is-hidden');
+    });
+
+    // ============= 示例填充 =============
+    $$('.example-pill').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        $('#input-ai').value = pill.dataset.fillAi;
+        $('#input-ai').focus();
+      });
+    });
+    $$('.example-group').forEach((card) => {
+      card.addEventListener('click', () => {
+        $('#input-match').value = card.dataset.fillMatch;
+        $('#input-match').focus();
+      });
+    });
+
+    // ============= 提交 =============
+    $('#submit-btn').addEventListener('click', () => {
+      if (currentMode === 'ai') runAI();
+      else runMatch();
+    });
+    $('#input-ai').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        runAI();
+      }
+    });
+    $('#input-match').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        runMatch();
+      }
+    });
+
+    // ============= AI 生成模拟 =============
+    function runAI() {
+      const text = $('#input-ai').value.trim() || '咖啡杯';
+      $('#ai-result-object').textContent = text;
+      switchOutput('loading-ai');
+
+      let eta = 28;
+      $('#eta').textContent = eta;
+      clearInterval(runAI._t);
+      runAI._t = setInterval(() => {
+        eta = Math.max(0, eta - 1);
+        $('#eta').textContent = eta;
+      }, 1000);
+
+      setTimeout(() => {
+        clearInterval(runAI._t);
+        switchOutput('result-ai');
+      }, 2400);
+    }
+
+    // ============= 组匹配模拟 =============
+    // 预置一份"词 → 图标名"的 mock 字典（模拟 LLM 返回）
+    const MATCH_DICT = {
+      首页: 'home', 消息: 'message-circle', 设置: 'settings', 搜索: 'search',
+      用户: 'user', 退出: 'log-out', 登录: 'log-in',
+      购物车: 'shopping-cart', 收藏: 'heart', 支付: 'credit-card',
+      订单: 'clipboard-list', 物流: 'truck', 客服: 'headphones', 评价: 'star',
+      点赞: 'thumbs-up', 评论: 'message-square', 分享: 'share-2',
+      关注: 'user-plus', 转发: 'repeat',
+      通知: 'bell', 下载: 'download', 上传: 'upload', 日历: 'calendar',
+      地图: 'map', 图片: 'image', 视频: 'video', 音乐: 'music',
+      鱼: null, // 故意设置未匹配作为演示
+    };
+
+    function parseWords(raw) {
+      return raw
+        .split(/[\s,，、\n]+/)
+        .map((w) => w.trim())
+        .filter(Boolean)
+        .slice(0, 20);
+    }
+
+    function runMatch() {
+      const raw = $('#input-match').value.trim();
+      if (!raw) {
+        // 默认示例
+        $('#input-match').value = '首页 消息 设置 搜索 用户 退出';
+      }
+      const words = parseWords($('#input-match').value);
+
+      switchOutput('loading-match');
+
+      // 模拟多阶段文案
+      const stages = [
+        'AI 正在分析词语语义...',
+        '跨语言翻译与同义词扩展...',
+        '从 Lucide 线性图标库中匹配...',
+      ];
+      let i = 0;
+      $('#match-progress-text').textContent = stages[i];
+      clearInterval(runMatch._t);
+      runMatch._t = setInterval(() => {
+        i = Math.min(stages.length - 1, i + 1);
+        $('#match-progress-text').textContent = stages[i];
+      }, 600);
+
+      setTimeout(() => {
+        clearInterval(runMatch._t);
+        renderMatchResult(words);
+        switchOutput('result-match');
+      }, 1800);
+    }
+
+    function renderMatchResult(words) {
+      const list = $('#match-list');
+      list.innerHTML = '';
+      let success = 0;
+      words.forEach((word) => {
+        const match = MATCH_DICT[word];
+        if (match) success++;
+        const row = document.createElement('div');
+        row.className = 'match-row' + (match ? '' : ' is-unmatched');
+        row.innerHTML = `
+          <div class="match-icon-box">
+            ${
+              match
+                ? `<iconify-icon icon="lucide:${match}"></iconify-icon>`
+                : `<iconify-icon icon="lucide:help-circle"></iconify-icon>`
+            }
+          </div>
+          <div class="match-word text-[13.5px]">${word}</div>
+          <div class="match-name-text text-[12.5px] font-mono text-[#8a8a8a]">
+            ${match ? 'lucide:' + match : '未匹配 · 该库未收录'}
+          </div>
+          <div class="row-actions">
+            ${
+              match
+                ? `
+              <button class="row-action-btn" title="下载 SVG" onclick="event.stopPropagation(); showToast('已下载 ${match}.svg')">
+                <iconify-icon icon="lucide:download" class="text-[14px]"></iconify-icon>
+              </button>
+              <button class="row-action-btn" title="复制代码" onclick="event.stopPropagation(); showToast('已复制 SVG 代码')">
+                <iconify-icon icon="lucide:copy" class="text-[14px]"></iconify-icon>
+              </button>
+              <button class="row-action-btn" title="移除" onclick="event.stopPropagation(); this.closest('.match-row').remove()">
+                <iconify-icon icon="lucide:x" class="text-[14px]"></iconify-icon>
+              </button>
+            `
+                : `
+              <button class="row-action-btn" title="移除" onclick="event.stopPropagation(); this.closest('.match-row').remove()">
+                <iconify-icon icon="lucide:x" class="text-[14px]"></iconify-icon>
+              </button>
+            `
+            }
+          </div>
+        `;
+        // 点击行打开详情
+        if (match) {
+          row.addEventListener('click', () =>
+            openIconModal({
+              name: match,
+              pack: 'lucide',
+              label: 'Lucide Icons',
+            }),
+          );
+          row.style.cursor = 'pointer';
+        }
+        list.appendChild(row);
+      });
+      $('#match-success').textContent = success;
+      $('#match-total').textContent = words.length;
+    }
+
+    // ============= 图标库下拉 =============
+    const libraryBtn = $('#library-btn');
+    const libraryDropdown = $('#library-dropdown');
+    libraryBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      libraryDropdown.classList.toggle('is-hidden');
+      $('#download-dropdown')?.classList.add('is-hidden');
+    });
+    $$('#library-dropdown .dropdown-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const libMap = {
+          lucide: 'Lucide',
+          heroicons: 'Heroicons',
+          ph: 'Phosphor',
+          tabler: 'Tabler',
+        };
+        const styleMap = {
+          linear: '线性',
+          solid: '填充',
+          regular: '常规',
+          duotone: '双色',
+        };
+        $('#library-label').textContent = libMap[item.dataset.lib];
+        $('#style-label').textContent = styleMap[item.dataset.style];
+        libraryDropdown.classList.add('is-hidden');
+      });
+    });
+
+    // 下载菜单
+    $('#download-all-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      $('#download-dropdown').classList.toggle('is-hidden');
+    });
+
+    // 点外部关闭下拉
+    document.addEventListener('click', () => {
+      libraryDropdown.classList.add('is-hidden');
+      $('#download-dropdown').classList.add('is-hidden');
+    });
+
+    // ============= 浏览模式 =============
+    const ICON_LIBRARY_POOL = [
+      'lucide:arrow-right', 'lucide:chevron-down', 'lucide:compass',
+      'lucide:user', 'lucide:users', 'lucide:shield', 'lucide:lock',
+      'lucide:folder', 'lucide:file', 'lucide:file-text', 'lucide:archive',
+      'lucide:download', 'lucide:upload', 'lucide:pencil', 'lucide:scissors',
+      'lucide:trash-2', 'lucide:copy', 'lucide:clipboard', 'lucide:wand-2',
+      'lucide:message-circle', 'lucide:mail', 'lucide:bell', 'lucide:thumbs-up',
+      'lucide:share-2', 'lucide:at-sign', 'lucide:cloud', 'lucide:sun',
+      'lucide:moon', 'lucide:cloud-rain', 'lucide:snowflake', 'lucide:wind',
+      'lucide:play', 'lucide:pause', 'lucide:music', 'lucide:film',
+      'lucide:camera', 'lucide:image', 'lucide:shopping-bag', 'lucide:credit-card',
+      'lucide:briefcase', 'lucide:trending-up', 'lucide:bar-chart',
+      'heroicons:cube', 'heroicons:sparkles', 'heroicons:bolt', 'heroicons:gift',
+      'ph:rocket', 'ph:planet', 'ph:brain', 'ph:lightbulb',
+      'tabler:palette', 'tabler:ghost', 'tabler:flame', 'tabler:diamond',
+      'feather:aperture', 'feather:watch', 'feather:zap', 'feather:coffee',
+    ];
+    const iconGrid = $('#icon-grid');
+    ICON_LIBRARY_POOL.forEach((key) => {
+      const [pack, name] = key.split(':');
+      const cell = document.createElement('button');
+      cell.className = 'icon-cell';
+      cell.title = `${name} · ${pack}`;
+      cell.innerHTML = `<iconify-icon icon="${key}"></iconify-icon>`;
+      cell.addEventListener('click', () =>
+        openIconModal({ name, pack, label: packLabel(pack) }),
+      );
+      iconGrid.appendChild(cell);
+    });
+    function packLabel(p) {
+      return {
+        lucide: 'Lucide Icons',
+        heroicons: 'Heroicons',
+        ph: 'Phosphor Icons',
+        tabler: 'Tabler Icons',
+        feather: 'Feather Icons',
+      }[p] || p;
+    }
+
+    function openBrowse() {
+      $('#workbench').classList.add('is-hidden');
+      $('#browse').classList.remove('is-hidden');
+      window.scrollTo({ top: 0 });
+    }
+    function closeBrowse() {
+      $('#browse').classList.add('is-hidden');
+      $('#workbench').classList.remove('is-hidden');
+      window.scrollTo({ top: 0 });
+    }
+
+    // ============= Modal =============
+    const modal = $('#icon-modal');
+    function openIconModal(ico) {
+      const key = `${ico.pack}:${ico.name}`;
+      $('#modal-name').textContent = ico.name;
+      $('#modal-pack').textContent = ico.label;
+      $('#modal-preview').setAttribute('icon', key);
+      $('#modal-icon-sm').setAttribute('icon', key);
+      $('#size-slider').value = 140;
+      $('#size-label').textContent = '140 px';
+      $('#modal-preview').style.fontSize = '140px';
+      updateCode('svg', ico);
+      $$('#icon-modal .mode-seg button').forEach((t) =>
+        t.classList.toggle('is-active', t.dataset.fmt === 'svg'),
+      );
+      modal.classList.remove('is-hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeIconModal() {
+      modal.classList.add('is-hidden');
+      document.body.style.overflow = '';
+    }
+    $('#size-slider').addEventListener('input', (e) => {
+      const v = e.target.value;
+      $('#size-label').textContent = `${v} px`;
+      $('#modal-preview').style.fontSize = `${v}px`;
+    });
+    $$('#icon-modal .mode-seg button').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        $$('#icon-modal .mode-seg button').forEach((t) => t.classList.remove('is-active'));
+        tab.classList.add('is-active');
+        updateCode(tab.dataset.fmt, {
+          name: $('#modal-name').textContent,
+          pack: $('#modal-pack').textContent.toLowerCase().split(' ')[0],
+          label: $('#modal-pack').textContent,
+        });
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('is-hidden')) closeIconModal();
+    });
+
+    function updateCode(fmt, ico) {
+      const key = `${ico.pack}:${ico.name}`;
+      const pascal = ico.name
+        .split('-')
+        .map((s) => s[0].toUpperCase() + s.slice(1))
+        .join('');
+      const block = $('#code-block');
+      const esc = (s) => s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const T = (s) => `<span class="text-white">${esc(s)}</span>`;
+      const S = (s) => `<span class="text-emerald-300">${esc(s)}</span>`;
+      const C = (s) => `<span class="text-[#5a5a5a]">${esc(s)}</span>`;
+
+      if (fmt === 'svg') {
+        block.innerHTML =
+          T('<svg') + ' xmlns=' + S('"http://www.w3.org/2000/svg"') +
+          ' viewBox=' + S('"0 0 24 24"') +
+          ' fill=' + S('"none"') + ' stroke=' + S('"currentColor"') +
+          ' stroke-width=' + S('"2"') + T('>') +
+          '\n  ' + C('<!-- 从 Iconify API 获取实际 path -->') +
+          '\n  ' + T('<path') + ' d=' + S('"..."') + T('/>') +
+          '\n' + T('</svg>');
+      } else if (fmt === 'png') {
+        block.innerHTML =
+          C('# PNG 由前端 Canvas 渲染下载') + '\n' +
+          T('curl') + ' ' +
+          S(`"https://api.iconify.design/${ico.pack}/${ico.name}.png?width=48"`) +
+          ' \\\n  -o ' + S(`"${ico.name}.png"`);
+      } else if (fmt === 'react') {
+        block.innerHTML =
+          T('import') + ' { Icon } ' + T('from') + ' ' + S("'@iconify/react'") + ';\n\n' +
+          T('export const') + ' ' + T(pascal) + ' = () ' + T('=>') + ' (\n  ' +
+          T('<Icon') + ' icon=' + S(`"${key}"`) + ' width=' + S('"24"') + ' ' + T('/>') +
+          '\n);';
+      } else if (fmt === 'vue') {
+        const openS = '<' + 'script setup>';
+        const closeS = '<' + '/script>';
+        block.innerHTML =
+          T('<template>') + '\n  ' +
+          T('<Icon') + ' icon=' + S(`"${key}"`) + ' ' + T('/>') + '\n' +
+          T('</template>') + '\n\n' +
+          T(openS) + '\n' +
+          T('import') + ' { Icon } ' + T('from') + ' ' + S("'@iconify/vue'") + ';\n' +
+          T(closeS);
+      }
+    }
+
+    // ============= 输入框自适应高度 =============
+    [$('#input-ai'), $('#input-match')].forEach((el) => {
+      el.addEventListener('input', () => {
+        el.style.height = 'auto';
+        el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+      });
+    });
+  </script>
+</body>
+</html>

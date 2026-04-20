@@ -1,0 +1,99 @@
+import type { FormEvent } from "react";
+
+import { Icon } from "@iconify/react";
+
+import { useSettingsStore } from "../stores/settings-store";
+
+interface SettingsDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
+  const { baseURL, apiKey, model, systemPrompt, setField, reset } = useSettingsStore();
+
+  if (!open) return null;
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    onClose();
+  }
+
+  return (
+    <>
+      <button className="dialog-backdrop" onClick={onClose} aria-label="关闭设置弹窗" />
+      <div className="dialog-panel surface-elevated p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="text-lg font-semibold">模型配置</div>
+            <div className="mt-1 text-sm text-[#8a8a8a]">
+              MVP 先使用本地存储。这里的配置会随浏览器缓存保存，不进入服务器。
+            </div>
+          </div>
+          <button className="btn-subtle h-8 w-8 rounded-md" onClick={onClose}>
+            <Icon icon="lucide:x" width="16" />
+          </button>
+        </div>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <label className="block">
+            <div className="mb-2 text-sm text-[#a0a0a0]">Base URL</div>
+            <input
+              className="field-input"
+              value={baseURL}
+              onChange={(event) => setField("baseURL", event.target.value)}
+              placeholder="https://api.openai.com/v1"
+            />
+          </label>
+
+          <label className="block">
+            <div className="mb-2 text-sm text-[#a0a0a0]">API Key</div>
+            <input
+              className="field-input"
+              type="password"
+              value={apiKey}
+              onChange={(event) => setField("apiKey", event.target.value)}
+              placeholder="sk-..."
+            />
+          </label>
+
+          <label className="block">
+            <div className="mb-2 text-sm text-[#a0a0a0]">Model</div>
+            <input
+              className="field-input"
+              value={model}
+              onChange={(event) => setField("model", event.target.value)}
+              placeholder="gpt-4o-mini / deepseek-chat / kimi-k2"
+            />
+          </label>
+
+          <label className="block">
+            <div className="mb-2 text-sm text-[#a0a0a0]">System Prompt</div>
+            <textarea
+              className="field-input min-h-[180px] resize-y leading-6"
+              value={systemPrompt}
+              onChange={(event) => setField("systemPrompt", event.target.value)}
+              placeholder="在这里微调图标匹配的大模型 system prompt"
+            />
+            <div className="mt-2 text-xs leading-5 text-[#6f6f6f]">
+              该配置仅保存在当前浏览器本地。你可以在这里微调匹配策略、约束返回格式、收紧或放宽图标选择规则。
+            </div>
+          </label>
+
+          <div className="flex items-center justify-between gap-3 pt-2">
+            <button
+              type="button"
+              className="btn-subtle h-9 rounded-lg px-3 text-sm"
+              onClick={reset}
+            >
+              清空配置
+            </button>
+            <button type="submit" className="btn-primary h-9 rounded-lg px-4 text-sm">
+              保存
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}

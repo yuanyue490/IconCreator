@@ -1,0 +1,111 @@
+import { useEffect, useState } from "react";
+
+import { Icon } from "@iconify/react";
+import { getLibraryStyleConfig } from "@iconcraft/shared";
+import type { IconLibraryId, IconStyleId } from "@iconcraft/shared";
+
+import { copySvgToClipboard, downloadSvg, fetchSvgText } from "../lib/api";
+
+interface IconDetailDialogProps {
+  library: IconLibraryId;
+  style: IconStyleId;
+  iconName: string | null;
+  open: boolean;
+  onClose: () => void;
+  onToast: (message: string) => void;
+}
+
+export function IconDetailDialog({
+  library,
+  style,
+  iconName,
+  open,
+  onClose,
+  onToast,
+}: IconDetailDialogProps) {
+  const [svgText, setSvgText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const styleConfig = getLibraryStyleConfig(library, style);
+  const collection = styleConfig?.collection ?? "lucide";
+
+  useEffect(() => {
+    if (!open || !iconName) return;
+
+    let cancelled = false;
+    setLoading(true);
+    fetchSvgText(library, style, iconName)
+      .then((svg) => {
+        if (!cancelled) setSvgText(svg);
+      })
+      .catch((error: Error) => {
+        if (!cancelled) {
+          setSvgText("");
+          onToast(error.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [iconName, library, onToast, open, style]);
+
+  if (!open || !iconName) return null;
+
+  return (
+    <>
+      <button className="dialog-backdrop" onClick={onClose} aria-label="关闭图标详情弹窗" />
+      <div className="dialog-panel surface-elevated p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <div className="text-lg font-semibold">{iconName}</div>
+            <div className="mt-1 text-sm text-[#8a8a8a]">{collection}: 真实 SVG 资源预览</div>
+          </div>
+          <button className="btn-subtle h-8 w-8 rounded-md" onClick={onClose}>
+            <Icon icon="lucide:x" width="16" />
+          </button>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-[240px_1fr]">
+          <div className="surface rounded-2xl p-5">
+            <div className="flex aspect-square items-center justify-center rounded-xl bg-[#0e0e0e] text-white">
+              <Icon icon={`${collection}:${iconName}`} width="120" />
+            </div>
+          </div>
+
+          <div className="flex min-h-[280px] flex-col">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs uppercase tracking-[0.22em] text-[#5a5a5a]">SVG 代码</span>
+              <div className="flex gap-2">
+                <button
+                  className="btn-ghost h-8 rounded-lg px-3 text-sm"
+                  onClick={async () => {
+                    await copySvgToClipboard(library, style, iconName);
+                    onToast("已复制 SVG 代码");
+                  }}
+                >
+                  复制
+                </button>
+                <button
+                  className="btn-primary h-8 rounded-lg px-3 text-sm"
+                  onClick={async () => {
+                    await downloadSvg(library, style, iconName);
+                    onToast(`已下载 ${iconName}.svg`);
+                  }}
+                >
+                  下载
+                </button>
+              </div>
+            </div>
+
+            <pre className="surface flex-1 overflow-auto rounded-2xl p-4 text-xs leading-6 text-[#a0a0a0]">
+              {loading ? "正在加载 SVG..." : svgText || "暂无 SVG 内容"}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

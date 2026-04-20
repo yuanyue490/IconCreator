@@ -1,0 +1,25 @@
+{
+  "name": "@iconcraft/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./config/prompt-presets.json": "./config/prompt-presets.json",
+    "./config/icon-catalog/lucide.json": "./config/icon-catalog/lucide.json",
+    "./config/icon-catalog/heroicons-outline.json": "./config/icon-catalog/heroicons-outline.json",
+    "./config/icon-catalog/heroicons-solid.json": "./config/icon-catalog/heroicons-solid.json",
+    "./config/icon-catalog/ph-regular.json": "./config/icon-catalog/ph-regular.json",
+    "./config/icon-catalog/ph-duotone.json": "./config/icon-catalog/ph-duotone.json",
+    "./config/icon-catalog/tabler.json": "./config/icon-catalog/tabler.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json"
+  }
+}

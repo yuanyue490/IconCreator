@@ -1,0 +1,16 @@
+{
+  "name": "iconcraft-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "corepack pnpm --filter @iconcraft/shared build && concurrently \"corepack pnpm --filter @iconcraft/backend dev\" \"corepack pnpm --filter @iconcraft/frontend dev\"",
+    "build": "corepack pnpm -r build",
+    "check": "corepack pnpm -r check"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "concurrently": "^9.2.1",
+    "typescript": "^6.0.3"
+  }
+}

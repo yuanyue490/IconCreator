@@ -1,0 +1,32 @@
+[
+  {
+    "id": "minimal",
+    "label": "极简主义",
+    "promptFragment": "clean minimalist style, soft gradient lighting, pastel color scheme",
+    "order": 1
+  },
+  {
+    "id": "glass",
+    "label": "玻璃拟态",
+    "promptFragment": "glassmorphism, translucent glass surface, subtle refraction, frosted edges",
+    "order": 2
+  },
+  {
+    "id": "clay",
+    "label": "粘土风格",
+    "promptFragment": "claymorphic style, soft rounded forms, matte clay texture, playful colors",
+    "order": 3
+  },
+  {
+    "id": "cyber",
+    "label": "赛博朋克",
+    "promptFragment": "cyberpunk style, neon accents, vibrant magenta and cyan glow, futuristic vibe",
+    "order": 4
+  },
+  {
+    "id": "metal",
+    "label": "金属质感",
+    "promptFragment": "polished metal finish, brushed steel texture, reflective highlights",
+    "order": 5
+  }
+]

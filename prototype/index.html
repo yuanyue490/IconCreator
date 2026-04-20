@@ -176,6 +176,30 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
+    /* Hero 位的放大版 Segmented，用于主视觉层级 */
+    .mode-seg--hero {
+      padding: 5px;
+      border-radius: 14px;
+      background: #0f0f0f;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    .mode-seg--hero button {
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      gap: 8px;
+      min-width: 130px;
+      justify-content: center;
+    }
+    .mode-seg--hero button.is-active {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+
     /* ---------- 输入 ---------- */
     .input-shell {
       background: #111;
@@ -197,6 +221,10 @@
       outline: 0;
       resize: none;
       font-family: inherit;
+    }
+    /* AI 生成与SVG匹配保持一致的默认高度（2 行基线） */
+    textarea.input-area {
+      min-height: calc(1.5em * 2);
     }
     textarea.input-area::placeholder,
     input.input-plain::placeholder {
@@ -265,55 +293,140 @@
     }
     .overlay-btn:hover { transform: translateY(-2px); }
 
-    /* ---------- 匹配结果行 ---------- */
-    .match-row {
+    /* ---------- 匹配结果：卡片平铺网格 ---------- */
+    /* 默认 5 列；窄屏自动降级 */
+    .match-grid {
       display: grid;
-      grid-template-columns: 56px 1fr 1fr 140px;
-      align-items: center;
-      padding: 10px 16px;
-      gap: 16px;
-      border-radius: 12px;
-      transition: background 0.15s ease;
+      grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+      gap: 12px;
     }
-    .match-row:hover { background: rgba(255, 255, 255, 0.03); }
-    .match-row + .match-row { margin-top: 2px; }
 
-    .match-icon-box {
-      width: 40px; height: 40px;
-      display: inline-flex; align-items: center; justify-content: center;
-      background: #0e0e0e;
-      color: #fafafa;
-      border-radius: 10px;
+    .match-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px;
+      background: #131313;
+      border-radius: 14px;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+      overflow: hidden;
     }
-    .match-icon-box iconify-icon { font-size: 22px; }
+    .match-card:hover {
+      background: #181818;
+      transform: translateY(-1px);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+        0 8px 20px rgba(0, 0, 0, 0.45);
+    }
 
-    .match-row.is-unmatched .match-icon-box {
-      color: #5a5a5a;
-      background: #0c0c0c;
+    /* 图标预览区 */
+    .match-card-icon {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0e0e0e;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      color: #fafafa;
     }
-    .match-row.is-unmatched .match-word { color: #8a8a8a; }
-    .match-row.is-unmatched .match-name-text {
+    .match-card-icon iconify-icon {
+      font-size: 44px;
+    }
+
+    /* 文字区 */
+    .match-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      text-align: center;
+    }
+    .match-card-label {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #fafafa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .match-card-name {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #8a8a8a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 未匹配态：dashed 描边 + 问号图标 + 灰化文字 */
+    .match-card.is-unmatched {
+      background: #101010;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      outline: 1px dashed rgba(255, 255, 255, 0.1);
+      outline-offset: -1px;
+    }
+    .match-card.is-unmatched .match-card-icon {
+      color: #5a5a5a;
+      background: #0b0b0b;
+    }
+    .match-card.is-unmatched .match-card-label { color: #8a8a8a; }
+    .match-card.is-unmatched .match-card-name {
       color: #5a5a5a;
       font-style: italic;
+      font-family: inherit;
     }
 
-    .match-row .row-actions {
-      display: flex; gap: 4px; justify-content: flex-end;
-      opacity: 0.4; transition: opacity 0.15s ease;
+    /* 悬浮操作条：右上角浮出 */
+    .match-card-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      z-index: 2;
     }
-    .match-row:hover .row-actions { opacity: 1; }
+    .match-card:hover .match-card-actions { opacity: 1; }
 
-    .row-action-btn {
-      width: 30px; height: 30px;
-      display: inline-flex; align-items: center; justify-content: center;
-      color: #8a8a8a;
-      border-radius: 6px;
+    .match-card-action {
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #d0d0d0;
+      background: rgba(20, 20, 20, 0.9);
+      border-radius: 7px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
       transition: all 0.12s ease;
+      backdrop-filter: blur(6px);
     }
-    .row-action-btn:hover {
+    .match-card-action iconify-icon { font-size: 13px; }
+    .match-card-action:hover {
       color: #fafafa;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(30, 30, 30, 0.96);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+
+    /* 加载骨架卡 */
+    .match-card-skel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: #131313;
+      border-radius: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      align-items: center;
     }
 
     /* ---------- 图标库网格（浏览模式）---------- */
@@ -416,6 +529,99 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .animate-in { animation: fadeInUp 0.28s ease both; }
+
+    /* ---------- Hero 标题图 & 功能说明 ---------- */
+    .hero-banner {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 880 / 120;
+      max-height: 160px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #111;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+    .hero-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* 稍降图片饱和度，让图片与 UI 深色调更融合 */
+      filter: brightness(0.75) contrast(1.05) saturate(0.9);
+    }
+    /* 图片上方暗角叠加，顶部自然过渡、左右暗角 */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(10, 10, 10, 0.15) 0%,
+          rgba(10, 10, 10, 0.55) 100%
+        ),
+        radial-gradient(
+          ellipse at center,
+          transparent 0%,
+          rgba(10, 10, 10, 0.55) 100%
+        );
+    }
+    .hero-caption {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      text-align: center;
+      padding: 0 24px;
+    }
+    .hero-caption-title {
+      font-size: 28px;
+      line-height: 1.1;
+      color: #fafafa;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+    }
+    .hero-caption-sub {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, 0.72);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: #a0a0a0;
+      line-height: 1.55;
+      transition: opacity 0.18s ease;
+    }
+
+    /* ---------- 提示词预览：对象名称高亮 & 占位 ---------- */
+    /* 输入框有内容时：以高亮 token 形式嵌入，强调"这部分来自用户输入" */
+    .prompt-object {
+      display: inline-block;
+      padding: 0 6px;
+      margin: 0 2px;
+      color: #fafafa;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+    /* 输入框为空时：dashed 占位，明确提示"这里将填入输入内容" */
+    .prompt-object-placeholder {
+      display: inline-block;
+      padding: 0 6px;
+      margin: 0 2px;
+      color: #6a6a6a;
+      font-style: italic;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 4px;
+      outline: 1px dashed rgba(255, 255, 255, 0.18);
+      outline-offset: 0;
+    }
   </style>
 </head>
 
@@ -466,32 +672,53 @@
   <!-- 主工作台（打开即见）         -->
   <!-- ============================= -->
   <main id="workbench" class="max-w-[920px] mx-auto px-6 pt-10 pb-24">
-    <!-- 工作台卡片 -->
-    <div class="surface-raised rounded-2xl p-5">
-      <!-- 模式切换 -->
-      <div class="flex items-center justify-between mb-4">
-        <div class="mode-seg" id="mode-seg">
+    <!-- Hero：标题图片位 + 当前功能说明 -->
+    <section class="mb-8 text-center">
+      <!-- 标题图片位：替换 src 即可换图 -->
+      <div id="hero-banner" class="hero-banner mx-auto">
+        <img
+          id="hero-image"
+          src="./assets/hero-banner.jpg"
+          alt="IconCraft 标题图"
+          class="hero-image"
+        />
+        <!-- 图片上方的暗角渐变，保证文字可读性 -->
+        <div class="hero-overlay"></div>
+        <!-- 图片上的标题文案 -->
+        <div class="hero-caption">
+          <div class="hero-caption-title font-display">IconCraft</div>
+          <div class="hero-caption-sub">AI 图标工作台 · 一次生成，批量匹配</div>
+        </div>
+      </div>
+      <!-- 模式切换（一级主选，居中、放大，决定下方工作台形态） -->
+      <div class="mt-6 flex justify-center">
+        <div class="mode-seg mode-seg--hero" id="mode-seg">
           <button data-mode="ai" class="is-active">
-            <iconify-icon icon="lucide:sparkles" class="text-[14px]"></iconify-icon>
+            <iconify-icon icon="lucide:sparkles" class="text-[15px]"></iconify-icon>
             AI 生成
           </button>
           <button data-mode="match">
-            <iconify-icon icon="lucide:layers" class="text-[14px]"></iconify-icon>
-            组匹配
+            <iconify-icon icon="lucide:layers" class="text-[15px]"></iconify-icon>
+            SVG匹配
           </button>
-        </div>
-        <div class="text-[11.5px] text-[#5a5a5a]" id="mode-hint">
-          输入对象名称，AI 生成 4 张 3D 风格候选图
         </div>
       </div>
 
+      <!-- 当前功能说明（随模式切换的辅助说明） -->
+      <p id="feature-desc" class="feature-desc mt-3">
+        用一句话描述对象，AI 将为你生成 4 张 3D 风格的精美图标候选
+      </p>
+    </section>
+
+    <!-- 工作台卡片 -->
+    <div class="surface-raised rounded-2xl p-5">
       <!-- 输入框 -->
       <div class="input-shell px-4 py-3">
-        <!-- AI 模式输入 -->
+        <!-- AI 模式输入（与匹配模式保持同样的默认 2 行高度） -->
         <textarea
           id="input-ai"
           class="input-area text-[15px] leading-[1.5]"
-          rows="1"
+          rows="2"
           placeholder="输入对象名称，如 咖啡杯 / 火箭 / 文件夹 / 相机"
         ></textarea>
         <!-- 匹配模式输入 -->
@@ -620,40 +847,36 @@
     </div>
 
     <!-- ============================= -->
+    <!-- 提示词预览（仅 AI 模式）      -->
+    <!-- 对象名称部分：输入框内容 → 高亮 / 未输入 → dashed 占位 -->
+    <!-- ============================= -->
+    <div id="prompt-preview" class="surface rounded-xl p-3.5 mt-3 flex items-start gap-3">
+      <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5"></iconify-icon>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] text-[#5a5a5a] uppercase tracking-wider">
+            提示词预览 · <span id="preview-style-label" class="text-[#a0a0a0] normal-case">极简主义</span>
+          </span>
+          <button
+            class="btn-subtle h-6 px-2 rounded text-[11.5px] inline-flex items-center gap-1"
+            id="preview-copy-btn"
+            title="复制完整提示词"
+          >
+            <iconify-icon icon="lucide:copy" class="text-[12px]"></iconify-icon>
+            复制
+          </button>
+        </div>
+        <div
+          id="preview-text"
+          class="text-[12.5px] text-[#a0a0a0] leading-relaxed font-mono break-words"
+        ></div>
+      </div>
+    </div>
+
+    <!-- ============================= -->
     <!-- 输出区                        -->
     <!-- ============================= -->
     <section class="mt-6" id="output">
-      <!-- ---- 空态（AI 模式）---- -->
-      <div id="empty-ai" class="output-state">
-        <div class="text-[12px] text-[#5a5a5a] mb-3 uppercase tracking-wider">试试这些</div>
-        <div class="flex flex-wrap gap-2">
-          <button class="example-pill chip" data-fill-ai="咖啡杯">
-            <iconify-icon icon="lucide:coffee" class="text-[12px]"></iconify-icon>
-            咖啡杯
-          </button>
-          <button class="example-pill chip" data-fill-ai="火箭">
-            <iconify-icon icon="lucide:rocket" class="text-[12px]"></iconify-icon>
-            火箭
-          </button>
-          <button class="example-pill chip" data-fill-ai="相机">
-            <iconify-icon icon="lucide:camera" class="text-[12px]"></iconify-icon>
-            相机
-          </button>
-          <button class="example-pill chip" data-fill-ai="耳机">
-            <iconify-icon icon="lucide:headphones" class="text-[12px]"></iconify-icon>
-            耳机
-          </button>
-          <button class="example-pill chip" data-fill-ai="地球">
-            <iconify-icon icon="lucide:globe" class="text-[12px]"></iconify-icon>
-            地球
-          </button>
-          <button class="example-pill chip" data-fill-ai="礼物盒">
-            <iconify-icon icon="lucide:gift" class="text-[12px]"></iconify-icon>
-            礼物盒
-          </button>
-        </div>
-      </div>
-
       <!-- ---- 空态（匹配模式）---- -->
       <div id="empty-match" class="output-state is-hidden">
         <div class="text-[12px] text-[#5a5a5a] mb-3 uppercase tracking-wider">试试这些场景</div>
@@ -763,33 +986,33 @@
           <div class="result-card">
             <div class="mock-icon mock-icon-1 aspect-square"><span class="relative z-10">☕</span></div>
             <div class="result-overlay">
-              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
+              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
             </div>
           </div>
           <div class="result-card">
             <div class="mock-icon mock-icon-2 aspect-square"><span class="relative z-10">☕</span></div>
             <div class="result-overlay">
-              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
+              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
             </div>
           </div>
           <div class="result-card">
             <div class="mock-icon mock-icon-3 aspect-square"><span class="relative z-10">☕</span></div>
             <div class="result-overlay">
-              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
+              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
             </div>
           </div>
           <div class="result-card">
             <div class="mock-icon mock-icon-4 aspect-square"><span class="relative z-10">☕</span></div>
             <div class="result-overlay">
-              <button class="overlay-btn"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:heart"></iconify-icon></button>
-              <button class="overlay-btn"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
+              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
+              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
+              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
             </div>
           </div>
         </div>
@@ -819,24 +1042,31 @@
             AI 正在分析词语语义...
           </span>
         </div>
-        <div class="surface rounded-xl p-2">
-          <div class="match-row">
-            <div class="skeleton w-10 h-10 rounded-lg"></div>
-            <div class="skeleton h-4 rounded" style="width: 60%;"></div>
-            <div class="skeleton h-4 rounded" style="width: 50%;"></div>
-            <div></div>
+        <div class="match-grid">
+          <div class="match-card-skel">
+            <div class="skeleton" style="width:100%;aspect-ratio:1;border-radius:10px;"></div>
+            <div class="skeleton h-3 rounded" style="width:72%;"></div>
+            <div class="skeleton h-2.5 rounded" style="width:56%;"></div>
           </div>
-          <div class="match-row">
-            <div class="skeleton w-10 h-10 rounded-lg"></div>
-            <div class="skeleton h-4 rounded" style="width: 50%;"></div>
-            <div class="skeleton h-4 rounded" style="width: 60%;"></div>
-            <div></div>
+          <div class="match-card-skel">
+            <div class="skeleton" style="width:100%;aspect-ratio:1;border-radius:10px;"></div>
+            <div class="skeleton h-3 rounded" style="width:64%;"></div>
+            <div class="skeleton h-2.5 rounded" style="width:48%;"></div>
           </div>
-          <div class="match-row">
-            <div class="skeleton w-10 h-10 rounded-lg"></div>
-            <div class="skeleton h-4 rounded" style="width: 55%;"></div>
-            <div class="skeleton h-4 rounded" style="width: 45%;"></div>
-            <div></div>
+          <div class="match-card-skel">
+            <div class="skeleton" style="width:100%;aspect-ratio:1;border-radius:10px;"></div>
+            <div class="skeleton h-3 rounded" style="width:78%;"></div>
+            <div class="skeleton h-2.5 rounded" style="width:60%;"></div>
+          </div>
+          <div class="match-card-skel">
+            <div class="skeleton" style="width:100%;aspect-ratio:1;border-radius:10px;"></div>
+            <div class="skeleton h-3 rounded" style="width:70%;"></div>
+            <div class="skeleton h-2.5 rounded" style="width:52%;"></div>
+          </div>
+          <div class="match-card-skel">
+            <div class="skeleton" style="width:100%;aspect-ratio:1;border-radius:10px;"></div>
+            <div class="skeleton h-3 rounded" style="width:66%;"></div>
+            <div class="skeleton h-2.5 rounded" style="width:58%;"></div>
           </div>
         </div>
       </div>
@@ -899,9 +1129,9 @@
           </div>
         </div>
 
-        <!-- 匹配列表 -->
-        <div class="surface rounded-xl p-2" id="match-list">
-          <!-- 行由 JS 渲染 -->
+        <!-- 匹配结果（卡片平铺，每排 5 个；窄屏自动降级）-->
+        <div class="match-grid" id="match-list">
+          <!-- 卡片由 JS 渲染 -->
         </div>
       </div>
     </section>
@@ -947,7 +1177,7 @@
         <div class="text-[12.5px] text-[#8a8a8a]">
           共 <span class="text-white font-medium">48,213</span> 个图标 · 6 个图标库
         </div>
-        <div class="text-[11.5px] text-[#5a5a5a]">提示：工作台的"组匹配"模式更适合批量场景</div>
+        <div class="text-[11.5px] text-[#5a5a5a]">提示：工作台的"SVG匹配"模式更适合批量场景</div>
       </div>
       <div
         id="icon-grid"
@@ -1087,15 +1317,99 @@
     // ============= 模式切换 =============
     let currentMode = 'ai';
     const modeButtons = $$('#mode-seg button');
-    const modeHint = {
-      ai: '输入对象名称，AI 生成 4 张 3D 风格候选图',
-      match: '输入一组词，AI 匹配同库同款图标组（上限 20 个）',
+    // Hero 下的"当前功能说明"（AI / 匹配 文案不同，作为主层级辅助说明）
+    const featureDesc = {
+      ai: '用一句话描述对象，AI 将为你生成 4 张 3D 风格的精美图标候选，支持多种风格与高级参数',
+      match: '输入一组词语，AI 将从统一的开源图标库中匹配风格一致的图标集，批量生成可直接用于产品',
     };
+
+    // ============= AI 风格 → 中文标签 + 英文提示词片段 =============
+    // 未来对接 SeeDream 时，后端直接用 prompt 片段即可
+    const STYLE_MAP = {
+      minimal: {
+        label: '极简主义',
+        prompt: 'clean minimalist style, soft gradient lighting, pastel color scheme',
+      },
+      glass: {
+        label: '玻璃拟态',
+        prompt: 'glassmorphism, translucent glass surface, subtle refraction, frosted edges',
+      },
+      clay: {
+        label: '粘土风格',
+        prompt: 'claymorphic style, soft rounded forms, matte clay texture, playful colors',
+      },
+      cyber: {
+        label: '赛博朋克',
+        prompt: 'cyberpunk style, neon accents, vibrant magenta and cyan glow, futuristic vibe',
+      },
+      metal: {
+        label: '金属质感',
+        prompt: 'polished metal finish, brushed steel texture, reflective highlights',
+      },
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[c]));
+    }
+
+    // 根据：当前选中风格 + 输入框文本，渲染提示词预览
+    function renderPromptPreview() {
+      const activeChip = $('#style-chips .chip.is-active');
+      const styleKey = activeChip?.dataset.style || 'minimal';
+      const cfg = STYLE_MAP[styleKey] || STYLE_MAP.minimal;
+      const input = $('#input-ai').value.trim();
+
+      $('#preview-style-label').textContent = cfg.label;
+
+      // 对象名称 token：有值 → 高亮；无值 → dashed 占位
+      const objectHtml = input
+        ? `<span class="prompt-object">${escapeHtml(input)}</span>`
+        : `<span class="prompt-object-placeholder">对象名称</span>`;
+
+      $('#preview-text').innerHTML =
+        `A 3D rendered icon of ${objectHtml}, isometric view, ` +
+        `${escapeHtml(cfg.prompt)}, floating on solid background, ` +
+        `studio quality, 4K.`;
+    }
+
+    // 复制按钮：把当前预览的纯文本写进剪贴板（用对象名称占位替换）
+    function copyPromptPreview() {
+      const activeChip = $('#style-chips .chip.is-active');
+      const cfg = STYLE_MAP[activeChip?.dataset.style || 'minimal'];
+      const obj = $('#input-ai').value.trim() || '{object}';
+      const text =
+        `A 3D rendered icon of ${obj}, isometric view, ` +
+        `${cfg.prompt}, floating on solid background, studio quality, 4K.`;
+      // 优先走 Clipboard API，失败时降级 execCommand（防老浏览器）
+      (navigator.clipboard?.writeText?.(text) ?? Promise.reject())
+        .then(() => showToast('已复制提示词'))
+        .catch(() => {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); showToast('已复制提示词'); }
+          catch { showToast('复制失败，请手动选择'); }
+          finally { document.body.removeChild(ta); }
+        });
+    }
     modeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         currentMode = btn.dataset.mode;
         modeButtons.forEach((b) => b.classList.toggle('is-active', b === btn));
-        $('#mode-hint').textContent = modeHint[currentMode];
+        // 切换 Hero 下的功能说明（带一个轻微的淡入过渡）
+        const desc = $('#feature-desc');
+        desc.style.opacity = '0';
+        setTimeout(() => {
+          desc.textContent = featureDesc[currentMode];
+          desc.style.opacity = '1';
+        }, 120);
         // 输入区
         $('#input-ai').classList.toggle('is-hidden', currentMode !== 'ai');
         $('#input-match').classList.toggle('is-hidden', currentMode !== 'match');
@@ -1110,10 +1424,12 @@
           $('#submit-label').textContent = '匹配图标';
           $('#submit-icon').setAttribute('icon', 'lucide:layers');
         }
-        // 输出区切换为对应空态
+        // 输出区切换为对应空态（AI 模式已移除"试试这些"空态，此时会全部隐藏）
         switchOutput(`empty-${currentMode}`);
         // 关闭高级面板
         $('#advanced-panel').classList.add('is-hidden');
+        // 提示词预览仅在 AI 模式下展示
+        $('#prompt-preview').classList.toggle('is-hidden', currentMode !== 'ai');
       });
     });
 
@@ -1129,8 +1445,12 @@
       chip.addEventListener('click', () => {
         $$('#style-chips .chip').forEach((c) => c.classList.remove('is-active'));
         chip.classList.add('is-active');
+        renderPromptPreview(); // 切换风格 → 同步更新预览
       });
     });
+
+    // 复制提示词按钮
+    $('#preview-copy-btn').addEventListener('click', copyPromptPreview);
 
     // 高级选项里的 chip（每组独立）
     $$('#advanced-panel > div').forEach((group) => {
@@ -1147,13 +1467,7 @@
       $('#advanced-panel').classList.toggle('is-hidden');
     });
 
-    // ============= 示例填充 =============
-    $$('.example-pill').forEach((pill) => {
-      pill.addEventListener('click', () => {
-        $('#input-ai').value = pill.dataset.fillAi;
-        $('#input-ai').focus();
-      });
-    });
+    // ============= 示例填充（仅匹配模式保留）=============
     $$('.example-group').forEach((card) => {
       card.addEventListener('click', () => {
         $('#input-match').value = card.dataset.fillMatch;
@@ -1199,7 +1513,7 @@
       }, 2400);
     }
 
-    // ============= 组匹配模拟 =============
+    // ============= SVG匹配模拟 =============
     // 预置一份"词 → 图标名"的 mock 字典（模拟 LLM 返回）
     const MATCH_DICT = {
       首页: 'home', 消息: 'message-circle', 设置: 'settings', 搜索: 'search',
@@ -1256,58 +1570,67 @@
       const list = $('#match-list');
       list.innerHTML = '';
       let success = 0;
+
       words.forEach((word) => {
         const match = MATCH_DICT[word];
         if (match) success++;
-        const row = document.createElement('div');
-        row.className = 'match-row' + (match ? '' : ' is-unmatched');
-        row.innerHTML = `
-          <div class="match-icon-box">
-            ${
-              match
-                ? `<iconify-icon icon="lucide:${match}"></iconify-icon>`
-                : `<iconify-icon icon="lucide:help-circle"></iconify-icon>`
-            }
+        const safeWord = escapeHtml(word);
+        // 已匹配 → 下载 / 复制代码 / 移除；未匹配 → 重试 / 移除
+        const actionsHtml = match
+          ? `
+            <button class="match-card-action" title="下载 SVG"
+              onclick="event.stopPropagation(); showToast('已下载 ${match}.svg')">
+              <iconify-icon icon="lucide:download"></iconify-icon>
+            </button>
+            <button class="match-card-action" title="复制 SVG 代码"
+              onclick="event.stopPropagation(); showToast('已复制 SVG 代码')">
+              <iconify-icon icon="lucide:copy"></iconify-icon>
+            </button>
+            <button class="match-card-action" title="移除"
+              onclick="event.stopPropagation(); this.closest('.match-card').remove()">
+              <iconify-icon icon="lucide:x"></iconify-icon>
+            </button>
+          `
+          : `
+            <button class="match-card-action" title="重试同义词"
+              onclick="event.stopPropagation(); showToast('正在尝试扩展同义词...')">
+              <iconify-icon icon="lucide:refresh-cw"></iconify-icon>
+            </button>
+            <button class="match-card-action" title="移除"
+              onclick="event.stopPropagation(); this.closest('.match-card').remove()">
+              <iconify-icon icon="lucide:x"></iconify-icon>
+            </button>
+          `;
+
+        const card = document.createElement('div');
+        card.className = 'match-card' + (match ? '' : ' is-unmatched');
+        card.innerHTML = `
+          <div class="match-card-actions">${actionsHtml}</div>
+          <div class="match-card-icon">
+            <iconify-icon icon="lucide:${match || 'help-circle'}"></iconify-icon>
           </div>
-          <div class="match-word text-[13.5px]">${word}</div>
-          <div class="match-name-text text-[12.5px] font-mono text-[#8a8a8a]">
-            ${match ? 'lucide:' + match : '未匹配 · 该库未收录'}
-          </div>
-          <div class="row-actions">
-            ${
-              match
-                ? `
-              <button class="row-action-btn" title="下载 SVG" onclick="event.stopPropagation(); showToast('已下载 ${match}.svg')">
-                <iconify-icon icon="lucide:download" class="text-[14px]"></iconify-icon>
-              </button>
-              <button class="row-action-btn" title="复制代码" onclick="event.stopPropagation(); showToast('已复制 SVG 代码')">
-                <iconify-icon icon="lucide:copy" class="text-[14px]"></iconify-icon>
-              </button>
-              <button class="row-action-btn" title="移除" onclick="event.stopPropagation(); this.closest('.match-row').remove()">
-                <iconify-icon icon="lucide:x" class="text-[14px]"></iconify-icon>
-              </button>
-            `
-                : `
-              <button class="row-action-btn" title="移除" onclick="event.stopPropagation(); this.closest('.match-row').remove()">
-                <iconify-icon icon="lucide:x" class="text-[14px]"></iconify-icon>
-              </button>
-            `
-            }
+          <div class="match-card-body">
+            <div class="match-card-label" title="${safeWord}">${safeWord}</div>
+            <div class="match-card-name" title="${match ? 'lucide:' + match : '未匹配 · 该库未收录'}">
+              ${match ? 'lucide:' + match : '未匹配'}
+            </div>
           </div>
         `;
-        // 点击行打开详情
+        // 点击卡片本体打开详情（action 按钮已 stopPropagation）
         if (match) {
-          row.addEventListener('click', () =>
+          card.addEventListener('click', () =>
             openIconModal({
               name: match,
               pack: 'lucide',
               label: 'Lucide Icons',
             }),
           );
-          row.style.cursor = 'pointer';
+        } else {
+          card.style.cursor = 'default';
         }
-        list.appendChild(row);
+        list.appendChild(card);
       });
+
       $('#match-success').textContent = success;
       $('#match-total').textContent = words.length;
     }
@@ -1498,6 +1821,12 @@
         el.style.height = Math.min(el.scrollHeight, 200) + 'px';
       });
     });
+    // AI 输入框变化时，同步刷新提示词预览的对象名称部分
+    $('#input-ai').addEventListener('input', renderPromptPreview);
+
+    // ============= 初始化 =============
+    // 首次渲染提示词预览，保证页面加载即有内容
+    renderPromptPreview();
   </script>
 </body>
 </html>

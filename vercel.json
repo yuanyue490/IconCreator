@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://icon-api.zeroyue.com/api/:path*"
+    }
+  ]
+}

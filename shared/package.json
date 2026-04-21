@@ -11,12 +11,18 @@
       "default": "./dist/index.js"
     },
     "./config/prompt-presets.json": "./config/prompt-presets.json",
-    "./config/icon-catalog/lucide.json": "./config/icon-catalog/lucide.json",
-    "./config/icon-catalog/heroicons-outline.json": "./config/icon-catalog/heroicons-outline.json",
-    "./config/icon-catalog/heroicons-solid.json": "./config/icon-catalog/heroicons-solid.json",
-    "./config/icon-catalog/ph-regular.json": "./config/icon-catalog/ph-regular.json",
-    "./config/icon-catalog/ph-duotone.json": "./config/icon-catalog/ph-duotone.json",
-    "./config/icon-catalog/tabler.json": "./config/icon-catalog/tabler.json"
+    "./config/icon-catalog/lucide/linear/aliases.json": "./config/icon-catalog/lucide/linear/aliases.json",
+    "./config/icon-catalog/lucide/linear/names.json": "./config/icon-catalog/lucide/linear/names.json",
+    "./config/icon-catalog/heroicons/linear/aliases.json": "./config/icon-catalog/heroicons/linear/aliases.json",
+    "./config/icon-catalog/heroicons/linear/names.json": "./config/icon-catalog/heroicons/linear/names.json",
+    "./config/icon-catalog/heroicons/solid/aliases.json": "./config/icon-catalog/heroicons/solid/aliases.json",
+    "./config/icon-catalog/heroicons/solid/names.json": "./config/icon-catalog/heroicons/solid/names.json",
+    "./config/icon-catalog/ph/regular/aliases.json": "./config/icon-catalog/ph/regular/aliases.json",
+    "./config/icon-catalog/ph/regular/names.json": "./config/icon-catalog/ph/regular/names.json",
+    "./config/icon-catalog/ph/duotone/aliases.json": "./config/icon-catalog/ph/duotone/aliases.json",
+    "./config/icon-catalog/ph/duotone/names.json": "./config/icon-catalog/ph/duotone/names.json",
+    "./config/icon-catalog/tabler/linear/aliases.json": "./config/icon-catalog/tabler/linear/aliases.json",
+    "./config/icon-catalog/tabler/linear/names.json": "./config/icon-catalog/tabler/linear/names.json"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

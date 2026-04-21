@@ -56,6 +56,18 @@ export interface MatchResponse {
         error: string | null;
         upstreamBody: string | null;
       };
+      /**
+       * 可选：LLM 关键词扩展 + 全量名字字面匹配的调试信息。
+       * 仅在精选词典 + 常规 LLM 都 miss 且允许调用 LLM 时才会填充。
+       */
+      keyword?: {
+        attempted: boolean;
+        success: boolean;
+        requestUrl: string | null;
+        upstreamStatus: number | null;
+        error: string | null;
+        expansions: Record<string, string[]> | null;
+      };
     };
   };
 }

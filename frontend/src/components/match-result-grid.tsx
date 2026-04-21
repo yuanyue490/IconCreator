@@ -65,7 +65,7 @@ export function MatchResultGrid({
   if (items.length === 0) {
     return (
       <div className="surface rounded-2xl p-6 text-center text-sm text-[#8a8a8a]">
-        输入一组词后开始 SVG 匹配。可切换不同开源图标库，未配置模型时会先走当前图标库的本地词典匹配。
+        输入一组词后开始 SVG 匹配，当前无内容
       </div>
     );
   }

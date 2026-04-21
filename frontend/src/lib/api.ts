@@ -1,3 +1,5 @@
+import JSZip from "jszip";
+
 import type { AppSettings, MatchRequest, MatchResponse } from "@iconcraft/shared";
 
 export async function matchWords(input: Omit<MatchRequest, "llm"> & { llm?: Partial<AppSettings> }) {
@@ -45,28 +47,102 @@ export async function downloadSvg(library: string, style: string, name: string) 
   URL.revokeObjectURL(url);
 }
 
-export async function downloadSvgBundle(library: string, style: string, names: string[]) {
-  const uniqueNames = [...new Set(names)];
-  if (uniqueNames.length === 0) return;
+/**
+ * 打包下载结果：
+ * - 把每个图标作为独立 .svg 放进 zip，而不是拼进一个 txt 里；
+ * - 单个 SVG 拉取失败不中断整体流程，汇总返回 failures 方便上层提示；
+ * - 返回值允许 UI 层判断「全失败」与「部分失败」两种场景。
+ */
+export interface BundleDownloadResult {
+  total: number;
+  succeeded: number;
+  failures: Array<{ name: string; message: string }>;
+}
 
-  const files = await Promise.all(
+function sanitizeFileName(name: string) {
+  // iconify 图标名一般是 kebab-case 安全字符，这里保守兜底一层，
+  // 把所有非字母数字/点/下划线/短横线替换成 "-"，避免个别来源出现非法路径。
+  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "icon";
+}
+
+export async function downloadSvgBundle(
+  library: string,
+  style: string,
+  names: string[],
+): Promise<BundleDownloadResult> {
+  const uniqueNames = [...new Set(names.filter(Boolean))];
+  if (uniqueNames.length === 0) {
+    return { total: 0, succeeded: 0, failures: [] };
+  }
+
+  const results = await Promise.all(
     uniqueNames.map(async (name) => {
-      const svg = await fetchSvgText(library, style, name);
-      return { name, svg };
+      try {
+        const svg = await fetchSvgText(library, style, name);
+        return { name, svg, ok: true as const };
+      } catch (error) {
+        return {
+          name,
+          ok: false as const,
+          message: error instanceof Error ? error.message : "未知错误",
+        };
+      }
     }),
   );
 
-  const blob = new Blob(
-    files.map((file) => `<!-- ${file.name}.svg -->\n${file.svg}\n\n`),
-    { type: "text/plain;charset=utf-8" },
-  );
+  const zip = new JSZip();
+  const folderName = `${library}-${style}`;
+  const folder = zip.folder(folderName) ?? zip;
+
+  // 防止极端情况下多个 name 经过 sanitize 后撞名。
+  const usedFileNames = new Set<string>();
+  const failures: Array<{ name: string; message: string }> = [];
+  let succeeded = 0;
+
+  for (const result of results) {
+    if (!result.ok) {
+      failures.push({ name: result.name, message: result.message });
+      continue;
+    }
+
+    let baseName = sanitizeFileName(result.name);
+    let fileName = `${baseName}.svg`;
+    let dedupeIndex = 1;
+    while (usedFileNames.has(fileName)) {
+      dedupeIndex += 1;
+      fileName = `${baseName}-${dedupeIndex}.svg`;
+    }
+    usedFileNames.add(fileName);
+    folder.file(fileName, result.svg);
+    succeeded += 1;
+  }
+
+  if (succeeded === 0) {
+    throw new Error(
+      failures[0]?.message
+        ? `SVG 获取失败：${failures[0].message}`
+        : "SVG 获取失败",
+    );
+  }
+
+  const blob = await zip.generateAsync({
+    type: "blob",
+    compression: "DEFLATE",
+    compressionOptions: { level: 6 },
+  });
 
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "iconcraft-svg-bundle.txt";
+  link.download = `iconcraft-${folderName}-${uniqueNames.length}.zip`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+
+  return {
+    total: uniqueNames.length,
+    succeeded,
+    failures,
+  };
 }

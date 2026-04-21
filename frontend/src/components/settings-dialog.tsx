@@ -86,7 +86,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               className="btn-subtle h-9 rounded-lg px-3 text-sm"
               onClick={reset}
             >
-              清空配置
+              还原配置
             </button>
             <button type="submit" className="btn-primary h-9 rounded-lg px-4 text-sm">
               保存

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 
 import { Icon } from "@iconify/react";
+import { BorderBeam } from "border-beam";
 import {
   DEFAULT_MATCH_LIBRARY,
   DEFAULT_MATCH_STYLE,
@@ -60,8 +61,7 @@ export function WorkbenchPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [previewIcon, setPreviewIcon] = useState<string | null>(null);
-  // dev-only: 调试面板开发期默认折叠，正式版发布前删除整块 UI。
-  const [debugOpen, setDebugOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const settings = useSettingsStore();
@@ -88,6 +88,40 @@ export function WorkbenchPage() {
       { catalog: 0, llm: 0, fallback: 0, unmatched: 0 },
     );
   }, [items]);
+  const hasMatchResult = meta.total > 0;
+  const hasMatchedIcons = useMemo(
+    () => items.some((item) => item.status === "matched" && Boolean(item.iconName)),
+    [items],
+  );
+  const matchSummaryText = useMemo(() => {
+    if (!hasMatchResult) {
+      return "";
+    }
+
+    const unmatchedText =
+      sourceSummary.unmatched > 0 ? `，仍有 ${sourceSummary.unmatched} 个未匹配` : "，全部已匹配";
+    const llmText = meta.usedLlm
+      ? "已启用语义扩展（LLM）补充命中。"
+      : "本次仅使用本地词典与本地兜底。";
+
+    return `本次共处理 ${meta.total} 个词，命中 ${meta.matched} 个${unmatchedText}。${llmText}`;
+  }, [hasMatchResult, meta.matched, meta.total, meta.usedLlm, sourceSummary.unmatched]);
+  const requestFeedbackText = useMemo(() => {
+    const modelName = (meta.debug.llm.model ?? settings.model.trim()) || "未识别模型";
+    if (!hasMatchResult) return "";
+    if (!meta.usedLlm) return "反馈：本次未触发语义匹配（LLM），仅使用本地匹配链路。";
+    if (!meta.debug.llm.attempted) return `反馈：已启用语义匹配（模型：${modelName}），但本次无需发起请求。`;
+    if (meta.debug.llm.success) return `反馈：语义匹配请求成功（模型：${modelName}）。`;
+    return `反馈：语义匹配请求未成功（模型：${modelName}，${meta.debug.llm.error ?? "未知原因"}）。`;
+  }, [
+    hasMatchResult,
+    meta.debug.llm.attempted,
+    meta.debug.llm.error,
+    meta.debug.llm.model,
+    meta.debug.llm.success,
+    meta.usedLlm,
+    settings.model,
+  ]);
 
   function showToast(message: string) {
     setToast(message);
@@ -147,14 +181,41 @@ export function WorkbenchPage() {
     setSelectedStyle(nextStyle);
   }
 
+  async function handleExportBundle() {
+    const names = items
+      .filter((item) => item.status === "matched" && item.iconName)
+      .map((item) => item.iconName as string);
+
+    if (names.length === 0) {
+      showToast("当前没有可导出的图标");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const result = await downloadSvgBundle(resultLibrary, resultStyle, names);
+      if (result.failures.length === 0) {
+        showToast(`已导出 ${result.succeeded} 个图标到 ZIP`);
+      } else {
+        showToast(
+          `已导出 ${result.succeeded}/${result.total} 个，${result.failures.length} 个失败`,
+        );
+      }
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "打包失败");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa]">
       <header className="flex h-12 items-center justify-between border-b border-white/5 px-6">
         <div className="flex items-center gap-3">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-sm font-semibold text-black">
-            I
+            厨
           </div>
-          <div className="text-sm font-semibold">IconCraft</div>
+          <div className="text-sm font-semibold">图标大厨</div>
           <div className="text-[11px] text-[#5a5a5a]">v0.1 MVP</div>
         </div>
 
@@ -166,15 +227,6 @@ export function WorkbenchPage() {
             <Icon icon="lucide:settings-2" width="14" />
             配置
           </button>
-          <a
-            href="https://iconify.design/"
-            target="_blank"
-            rel="noreferrer"
-            className="btn-subtle inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[12.5px]"
-          >
-            <Icon icon="lucide:library-big" width="14" />
-            Iconify
-          </a>
         </div>
       </header>
 
@@ -183,8 +235,8 @@ export function WorkbenchPage() {
           <div className="hero-banner mx-auto">
             <div className="hero-overlay" />
             <div className="hero-caption">
-              <div className="hero-caption-title">IconCraft</div>
-              <div className="hero-caption-sub">SVG 图标匹配 MVP · 多开源图标库可切换</div>
+              <div className="hero-caption-title">图标大厨</div>
+              <div className="hero-caption-sub">SVG图标聚合匹配搜索 · 多开源图标库可切换</div>
             </div>
           </div>
 
@@ -205,11 +257,11 @@ export function WorkbenchPage() {
           </div>
 
           <p className="mt-3 text-sm leading-6 text-[#a0a0a0]">
-            输入一组中文词语，系统会优先通过本地词典精确匹配，再结合你配置的大模型做语义补全，
-            最终返回当前图标库下可复制、可下载的 SVG 图标。
+            输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。
           </p>
         </section>
 
+        <BorderBeam size="md" colorVariant="ocean" duration={4} strength={0.3}>
         <section className="surface-raised rounded-[20px] p-5">
           <div className="input-shell px-4 py-3">
             <textarea
@@ -224,7 +276,7 @@ export function WorkbenchPage() {
                   void handleMatch();
                 }
               }}
-              placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：吃 住 行 游 购 娱"
+              placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：首页 管理 安防 监控"
             />
           </div>
 
@@ -274,6 +326,7 @@ export function WorkbenchPage() {
             </button>
           </div>
         </section>
+        </BorderBeam>
 
         <section className="mt-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -297,113 +350,50 @@ export function WorkbenchPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                className="btn-ghost h-8 rounded-lg px-3 text-sm"
-                onClick={() => void handleMatch()}
-              >
-                重新匹配
-              </button>
-              <button
-                className="btn-primary h-8 rounded-lg px-3 text-sm"
-                onClick={async () => {
-                  const names = items
-                    .filter((item) => item.status === "matched" && item.iconName)
-                    .map((item) => item.iconName as string);
-                  await downloadSvgBundle(resultLibrary, resultStyle, names);
-                  showToast("已导出当前匹配组");
-                }}
-                disabled={items.every((item) => item.status !== "matched")}
-              >
-                导出当前组
-              </button>
+              {hasMatchedIcons ? (
+                <button
+                  className="btn-primary inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm"
+                  onClick={() => void handleExportBundle()}
+                  disabled={exporting}
+                >
+                  <Icon
+                    icon={exporting ? "lucide:loader-circle" : "lucide:archive"}
+                    width="14"
+                  />
+                  {exporting ? "打包中..." : "导出全部"}
+                </button>
+              ) : null}
             </div>
           </div>
 
-          <div className="surface mb-4 rounded-2xl p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[0.22em] text-[#5a5a5a]">
-                命中来源
-              </span>
-              <span className="source-pill source-pill--catalog">本地词典 {sourceSummary.catalog}</span>
-              <span className="source-pill source-pill--llm">LLM 语义 {sourceSummary.llm}</span>
-              <span className="source-pill source-pill--fallback">本地兜底 {sourceSummary.fallback}</span>
-              <span className="source-pill source-pill--unmatched">未匹配 {sourceSummary.unmatched}</span>
-            </div>
-            <div className="mt-3 text-sm leading-6 text-[#8a8a8a]">
-              当前处理顺序：先查本地词典；词典未命中且已配置模型时，再交给 LLM 做语义匹配；
-              若模型结果不存在或不可信，再走本地兜底；仍然失败则标记为未匹配，不会强行硬猜。
-            </div>
-          </div>
-
-          <div className="surface mb-4 rounded-2xl p-4">
-            <button
-              className="flex w-full items-center justify-between text-left"
-              onClick={() => setDebugOpen((value) => !value)}
-            >
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-[#5a5a5a]">
-                  请求调试
-                </div>
-                <div className="mt-1 text-sm text-[#a0a0a0]">
-                  查看本次是否真的发起了 LLM 请求、用了哪个模型、上游是否成功返回。
-                </div>
+          {hasMatchResult ? (
+            <div className="match-info mb-4 rounded-2xl px-1 py-1">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-[#5a5a5a]">
+                  匹配说明
+                </span>
+                <span
+                  className="info-tooltip"
+                  tabIndex={0}
+                  role="button"
+                  aria-label="查看匹配处理顺序说明"
+                >
+                  <Icon icon="lucide:circle-help" width="13" />
+                  <span className="info-tooltip__bubble">
+                    处理顺序：先查本地词典；词典未命中且已配置模型时，再交给 LLM 做语义匹配；
+                    若模型结果不存在或不可信，再走本地兜底；仍然失败则标记为未匹配，不会强行硬猜。
+                  </span>
+                </span>
               </div>
-              <Icon icon={debugOpen ? "lucide:chevron-up" : "lucide:chevron-down"} width="16" />
-            </button>
-
-            {debugOpen ? (
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="debug-item">
-                  <div className="debug-item-label">LLM 配置可用</div>
-                  <div className="debug-item-value">
-                    {meta.debug.llm.enabledByConfig ? "是" : "否"}
-                  </div>
-                </div>
-                <div className="debug-item">
-                  <div className="debug-item-label">本次尝试请求</div>
-                  <div className="debug-item-value">
-                    {meta.debug.llm.attempted ? "是" : "否"}
-                  </div>
-                </div>
-                <div className="debug-item">
-                  <div className="debug-item-label">实际模型</div>
-                  <div className="debug-item-value">{meta.debug.llm.model ?? "未提供"}</div>
-                </div>
-                <div className="debug-item">
-                  <div className="debug-item-label">上游状态码</div>
-                  <div className="debug-item-value">
-                    {meta.debug.llm.upstreamStatus ?? "无"}
-                  </div>
-                </div>
-                <div className="debug-item">
-                  <div className="debug-item-label">已带 Authorization</div>
-                  <div className="debug-item-value">
-                    {meta.debug.llm.authHeaderPresent ? "是" : "否"}
-                  </div>
-                </div>
-                <div className="debug-item md:col-span-2">
-                  <div className="debug-item-label">请求地址</div>
-                  <div className="debug-item-value break-all">
-                    {meta.debug.llm.requestUrl ?? "未发起请求"}
-                  </div>
-                </div>
-                <div className="debug-item md:col-span-2">
-                  <div className="debug-item-label">请求结果</div>
-                  <div className="debug-item-value">
-                    {meta.debug.llm.success
-                      ? "LLM 请求成功并返回可解析 JSON"
-                      : meta.debug.llm.error ?? "当前未触发 LLM 请求"}
-                  </div>
-                </div>
-                <div className="debug-item md:col-span-2">
-                  <div className="debug-item-label">上游响应正文</div>
-                  <div className="debug-item-value whitespace-pre-wrap break-all">
-                    {meta.debug.llm.upstreamBody ?? "无"}
-                  </div>
-                </div>
+              <p className="match-info__text">{matchSummaryText}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="source-pill source-pill--catalog">本地词典 {sourceSummary.catalog}</span>
+                <span className="source-pill source-pill--llm">LLM 语义 {sourceSummary.llm}</span>
+                <span className="source-pill source-pill--fallback">本地兜底 {sourceSummary.fallback}</span>
+                <span className="source-pill source-pill--unmatched">未匹配 {sourceSummary.unmatched}</span>
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           <MatchResultGrid
             library={resultLibrary}
@@ -413,6 +403,7 @@ export function WorkbenchPage() {
             onPreview={(iconName) => setPreviewIcon(iconName)}
             onToast={showToast}
           />
+          {hasMatchResult ? <p className="match-feedback mt-6">{requestFeedbackText}</p> : null}
         </section>
       </main>
 

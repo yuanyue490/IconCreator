@@ -1,4 +1,4 @@
-# IconCraft 项目进度记录
+# 图标大厨（IconCraft）项目进度记录
 
 > **日期**：2026-04-20
 > **阶段**：正式开发推进 · SVG 匹配 MVP 落地
@@ -207,8 +207,8 @@ f:/VibeCoding/IconCreator/
 
 ### 4.4 待定问题
 
-- [ ] **品牌名**：`IconCraft` 目前是占位，是否保留或改名
-- [ ] **Logo 设计**：当前是简单字标 `[I]`，需要正式设计
+- [x] **品牌名**：已从 `IconCraft` 改为「图标大厨」（代码仓与包命名空间继续沿用 `IconCraft` / `@iconcraft/*`）
+- [ ] **Logo 设计**：当前是简单字标 `[厨]`，需要正式设计
 - [ ] **域名选型**
 - [ ] **SeeDream API 接入方式**：官方 API 还是通过第三方聚合
 - [ ] **AI 匹配的 LLM 选型**：GPT-4o-mini / DeepSeek / Kimi 的具体基准测试

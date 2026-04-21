@@ -18,9 +18,16 @@ const DEFAULT_SYSTEM_PROMPT = [
 ].join(" ");
 
 function buildDefaultSettings(): AppSettings {
+  // 安全边界：apiKey 只允许在开发模式下预置。
+  // 生产构建时 import.meta.env.DEV 为 false，Vite 会在编译期剔除 false 分支，
+  // 从而保证 VITE_DEFAULT_LLM_API_KEY 的真实值不会被打进前端 JS。
+  const devPresetApiKey = import.meta.env.DEV
+    ? import.meta.env.VITE_DEFAULT_LLM_API_KEY?.trim() ?? ""
+    : "";
+
   return {
     baseURL: import.meta.env.VITE_DEFAULT_LLM_BASE_URL?.trim() ?? "",
-    apiKey: import.meta.env.VITE_DEFAULT_LLM_API_KEY?.trim() ?? "",
+    apiKey: devPresetApiKey,
     model: import.meta.env.VITE_DEFAULT_LLM_MODEL?.trim() ?? "",
     systemPrompt:
       import.meta.env.VITE_DEFAULT_LLM_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT,

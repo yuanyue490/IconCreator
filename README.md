@@ -1,8 +1,8 @@
-# IconCraft · AI 图标工作台
+# 图标大厨 · AI 图标工作台
 
 > 一次生成，批量匹配。AI 驱动的图标创作与检索工作台。
 
-本仓库是 IconCraft 的主工程，目前已经进入 **正式开发阶段**。项目以 `pnpm workspace` 组织 `frontend`、`backend`、`shared` 三个包，原型文件仍保留用于设计参考。
+本仓库是「图标大厨」的主工程（代码仓名仍为 IconCreator，包命名空间仍为 `@iconcraft/*`，仅用于内部标识），目前已经进入 **正式开发阶段**。项目以 `pnpm workspace` 组织 `frontend`、`backend`、`shared` 三个包，原型文件仍保留用于设计参考。
 
 ---
 
@@ -10,10 +10,11 @@
 
 ```
 IconCreator/
-├── docs/                # 产品文档（PRD / 设计 / 进度）
+├── docs/                # 产品文档（PRD / 设计 / 进度 / 依赖排障）
 │   ├── PRD.md
 │   ├── DESIGN.md
-│   └── PROGRESS.md
+│   ├── PROGRESS.md
+│   └── ICONIFY.md       # Iconify 集成说明与排障
 │
 ├── prototype/           # 纯 HTML 原型（保留用于视觉和交互参考）
 │   ├── index.html
@@ -37,10 +38,12 @@ IconCreator/
 ├── shared/              # 前后端共享类型、常量与配置
 │   ├── config/
 │   │   ├── prompt-presets.json
-│   │   └── icon-catalog/
+│   │   └── icon-catalog/<library>/<style>/
+│   │       ├── aliases.json   # 精选中英别名词典（LLM prompt 候选源）
+│   │       └── names.json     # Iconify 全量图标名（直连命中 + 合法性校验）
 │   └── src/
 │
-├── scripts/             # 一次性脚本（后续用于 catalog 生成等）
+├── scripts/             # 一次性脚本（含 catalog 名字生成）
 ├── .github/workflows/   # CI / CD
 └── README.md
 ```
@@ -69,6 +72,8 @@ IconCreator/
 | AI 匹配 | OpenAI 兼容协议 |
 | 图标源 | Iconify API + 本地 JSON 索引 |
 
+Iconify 在本仓库中的用途、请求链路与常见问题排查，见 [`docs/ICONIFY.md`](./docs/ICONIFY.md)。
+
 ## 本地开发
 
 首次安装依赖：
@@ -90,11 +95,38 @@ corepack pnpm check
 corepack pnpm build
 ```
 
+刷新各图标库的全量名字（`names.json`，来源 Iconify 官方 collection 接口）：
+
+```bash
+corepack pnpm catalog:names
+```
+
 默认情况下：
 
 - 前端 Vite 开发服务器运行在 `5173`
 - 后端 Fastify 开发服务器运行在 `8787`
 - 前端通过 Vite proxy 转发 `/api`
+
+## LLM 密钥与部署（开发 / 生产切分）
+
+本项目支持「同一份代码、不同环境不同读法」，避免线上把密钥打进前端包。
+
+**开发期**：图省事可在 `frontend/.env.local` 设 `VITE_DEFAULT_LLM_API_KEY` 等（已 `.gitignore`），工作台打开即带默认值。
+
+- 代码里已用 `import.meta.env.DEV` 守卫：**生产构建时**这段会被 Vite 编译期剔除，
+  `VITE_DEFAULT_LLM_API_KEY` 的真实值 **不会出现在线上 JS 里**。
+
+**生产期**：推荐在 **后端环境变量** 配置站长密钥（仅服务端可见）：
+
+- `LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY` / `LLM_SYSTEM_PROMPT`
+- 前端不带 `apiKey` 时，后端会用这些值兜底；用户填了自己的 key 则以用户为准（BYOK 兼容）。
+- 示例：`backend/.env.example`、`frontend/.env.example`（都已被 `.gitignore` 忽略，请复制后再填真值）。
+
+**发布前检查清单**：
+
+- 生产构建的构建环境 **不要** 注入任何 `VITE_DEFAULT_LLM_*`（尤其 `API_KEY`）。
+- 服务端 `LLM_API_KEY` 通过部署平台的 secret / 环境变量下发，避免写入仓库或前端构建。
+- 发布前建议 `rg VITE_DEFAULT_LLM_API_KEY frontend/dist`（或你平台的产物目录），确认线上包内不含真实 key 字符串。
 
 ## 当前支持的图标库
 

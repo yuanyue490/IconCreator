@@ -17,8 +17,28 @@ function stripCodeFence(text: string) {
     .replace(/\s*```$/, "");
 }
 
+/**
+ * 合并「前端传入的配置」与「服务器环境变量兜底」。
+ * - 前端字段非空则优先；否则回退到 process.env。
+ * - 这是把「站长密钥只放服务器、浏览器看不到」落地的关键：
+ *   生产环境只需配置 LLM_* 环境变量，用户不填 apiKey 也能用，
+ *   且密钥只驻留在后端进程里。
+ */
+export function resolveLlmConfig(llm?: Partial<AppSettings>): AppSettings {
+  const pick = (value: string | undefined, fallback: string | undefined) =>
+    value?.trim() || fallback?.trim() || "";
+
+  return {
+    baseURL: pick(llm?.baseURL, process.env.LLM_BASE_URL),
+    apiKey: pick(llm?.apiKey, process.env.LLM_API_KEY),
+    model: pick(llm?.model, process.env.LLM_MODEL),
+    systemPrompt: pick(llm?.systemPrompt, process.env.LLM_SYSTEM_PROMPT),
+  };
+}
+
 function hasLlmConfig(llm?: Partial<AppSettings>) {
-  return Boolean(llm?.baseURL && llm?.model);
+  const resolved = resolveLlmConfig(llm);
+  return Boolean(resolved.baseURL && resolved.model);
 }
 
 export function canUseLlm(llm?: Partial<AppSettings>) {
@@ -71,13 +91,14 @@ export async function requestLlmMatches(input: {
     };
   }
 
-  const baseURL = llm?.baseURL?.replace(/\/+$/, "");
-  const model = llm?.model?.trim();
-  const apiKey = llm?.apiKey?.trim();
+  const resolved = resolveLlmConfig(llm);
+  const baseURL = resolved.baseURL.replace(/\/+$/, "");
+  const model = resolved.model;
+  const apiKey = resolved.apiKey;
   const authHeaderPresent = Boolean(apiKey);
   const requestUrl = `${baseURL}/chat/completions`;
 
-  const systemPrompt = llm?.systemPrompt?.trim() || DEFAULT_SYSTEM_PROMPT;
+  const systemPrompt = resolved.systemPrompt || DEFAULT_SYSTEM_PROMPT;
 
   const candidateLines = catalog
     .map((entry) => `${entry.name}: ${entry.aliases.join(", ")}`)
@@ -116,7 +137,7 @@ export async function requestLlmMatches(input: {
           enabledByConfig,
           attempted: true,
           requestUrl,
-          model: model ?? null,
+          model: model || null,
           authHeaderPresent,
           upstreamStatus: response.status,
           success: false,
@@ -157,7 +178,7 @@ export async function requestLlmMatches(input: {
         enabledByConfig,
         attempted: true,
         requestUrl,
-        model: model ?? null,
+        model: model || null,
         authHeaderPresent,
         upstreamStatus: response.status,
         success: true,
@@ -172,13 +193,138 @@ export async function requestLlmMatches(input: {
         enabledByConfig,
         attempted: true,
         requestUrl,
-        model: model ?? null,
+        model: model || null,
         authHeaderPresent,
         upstreamStatus: null,
         success: false,
         error: error instanceof Error ? error.message : "Unknown LLM error",
         upstreamBody: null,
       },
+    };
+  }
+}
+
+/** 用于描述 LLM 关键词扩展调用的调试信息。 */
+export interface LlmKeywordDebugInfo {
+  attempted: boolean;
+  success: boolean;
+  requestUrl: string | null;
+  upstreamStatus: number | null;
+  error: string | null;
+  expansions: Record<string, string[]> | null;
+}
+
+const KEYWORD_EXPAND_SYSTEM_PROMPT = [
+  "You expand user terms into English keywords that are commonly used in icon library names.",
+  "For each input word, return 3 to 8 concise keywords.",
+  "Keywords must be lowercase, either a single English word or short hyphenated phrase.",
+  "Prefer nouns and concrete imagery (e.g. for 火 return fire, flame, burn, heat).",
+  "Return JSON only, no markdown.",
+  'Output format: {"expansions":[{"word":"...","keywords":["...","..."]}]}.',
+].join(" ");
+
+/**
+ * 将用户输入的词（中文或其他语言）扩展为英文关键词集合，
+ * 供上游用这些关键词在图标全量名字里做字面匹配，从而
+ * 打通「火 → flame」这类精选词典没覆盖、但 Iconify 里存在的语义桥。
+ *
+ * 与 requestLlmMatches 的关键差异：
+ *  - prompt 中不带图标候选清单，体积固定且与图标库规模无关；
+ *  - 输出只含英文关键词，不直接输出图标名；
+ *  - 只有在精选词典 + 常规 LLM 匹配都 miss 后才会被调用，成本可控。
+ */
+export async function requestKeywordExpansion(input: {
+  words: string[];
+  llm?: Partial<AppSettings>;
+}): Promise<LlmKeywordDebugInfo> {
+  const { words, llm } = input;
+
+  if (!hasLlmConfig(llm) || words.length === 0) {
+    return {
+      attempted: false,
+      success: false,
+      requestUrl: null,
+      upstreamStatus: null,
+      error: words.length === 0 ? null : "LLM config missing for keyword expansion.",
+      expansions: null,
+    };
+  }
+
+  const resolved = resolveLlmConfig(llm);
+  const baseURL = resolved.baseURL.replace(/\/+$/, "");
+  const requestUrl = `${baseURL}/chat/completions`;
+  const apiKey = resolved.apiKey;
+
+  try {
+    const response = await fetch(requestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: resolved.model,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: KEYWORD_EXPAND_SYSTEM_PROMPT },
+          { role: "user", content: `words: ${JSON.stringify(words)}` },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      return {
+        attempted: true,
+        success: false,
+        requestUrl,
+        upstreamStatus: response.status,
+        error: `Keyword expansion failed with ${response.status}`,
+        expansions: null,
+      };
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error("Keyword expansion response is empty");
+    }
+
+    const parsed = JSON.parse(stripCodeFence(content)) as {
+      expansions?: Array<{ word?: string; keywords?: unknown }>;
+    };
+
+    const expansions: Record<string, string[]> = {};
+    if (parsed && Array.isArray(parsed.expansions)) {
+      for (const item of parsed.expansions) {
+        if (typeof item?.word !== "string") continue;
+        const list = Array.isArray(item.keywords)
+          ? item.keywords.filter((kw): kw is string => typeof kw === "string" && kw.length > 0)
+          : [];
+        if (list.length > 0) {
+          expansions[item.word] = list;
+        }
+      }
+    }
+
+    return {
+      attempted: true,
+      success: true,
+      requestUrl,
+      upstreamStatus: response.status,
+      error: null,
+      expansions,
+    };
+  } catch (error) {
+    return {
+      attempted: true,
+      success: false,
+      requestUrl,
+      upstreamStatus: null,
+      error: error instanceof Error ? error.message : "Unknown keyword expansion error",
+      expansions: null,
     };
   }
 }

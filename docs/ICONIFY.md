@@ -18,8 +18,8 @@
 | 用途 | 位置 | 说明 |
 | --- | --- | --- |
 | React 内联展示小图标 | `frontend` → `@iconify/react`（如 `workbench.tsx`、结果网格、详情弹窗） | 浏览器侧按 `collection:name` 渲染，依赖 Iconify 组件与（按需）公共 API。 |
-| 匹配结果的 SVG 文本（下载/复制等） | `backend/src/routes/icons.ts` | 校验 **本地 catalog** 含该图标名后，服务端 `fetch` **公共 Iconify API** 拉取 `.svg`，进程内 `Map` 缓存。 |
-| 产品外链 | `frontend/src/pages/workbench.tsx` | Header「Iconify」按钮跳转官网，便于查图标集与文档。 |
+| 匹配结果的 SVG 文本（下载/复制/ZIP 导出等） | `backend/src/routes/icons.ts` | 校验 **本地 catalog** 含该图标名后，服务端 `fetch` **公共 Iconify API** 拉取 `.svg`，进程内 `Map` 缓存。 |
+| 图标名合法性裁决 | `shared/config/icon-catalog/**` + `backend/src/services/icon-catalog.ts` | `aliases.json` 提供精选别名，`names.json` 提供全量合法图标名；两者共同决定哪些名字可以继续回源到 Iconify。 |
 
 **请求路径（当前架构）**：浏览器 → 同源 `/api/icons/...` → **后端** → `https://api.iconify.design/...` → 返回 SVG。  
 因此 **浏览器不直连** Iconify 拉 SVG（由后端代理），一般不受浏览器对 `api.iconify.design` 的 CORS 限制；若 SVG 失败，优先查 **后端日志与 502 响应**。
@@ -47,7 +47,7 @@
 
 - **502** 且文案含 upstream：多为后端请求 `api.iconify.design` **失败**（对端不可用、DNS、防火墙、TLS 拦截）。
   - 在 **运行后端的机器** 上测试：`curl -I "https://api.iconify.design/lucide.svg"`（collection 以 `shared` 中 `styleConfig` 为准）。
-- **404**：可能是 **本地 catalog 无该 name**（`icons.ts` 在校验 catalog 后直接 404），与 Iconify 无关；应查匹配逻辑与 catalog 数据。
+- **404**：可能是 **本地 catalog 无该 name**（`icons.ts` 在校验 `aliases.json / names.json` 后直接 404），与 Iconify 无关；应查匹配逻辑与 catalog 数据。
 
 ### 3. 仅内网/离线环境
 
@@ -64,7 +64,7 @@
 
 | 现象 | 更可能原因 |
 | --- | --- |
-| 匹配无结果 / 语义不对 | LLM 配置、`/api/match`、catalog 词表，**非** Iconify SVG 链路。 |
+| 匹配无结果 / 语义不对 | LLM 配置、`/api/match`、`aliases.json / names.json` 词表与匹配策略，**非** Iconify SVG 链路。 |
 | 仅 SVG 失败 | Iconify 上游或后端代理、网络；按上表 502/404 区分。 |
 
 ---

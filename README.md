@@ -50,12 +50,12 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、结果卡片网格、图标详情弹窗、配置弹窗、开发期请求调试面板。
-- `backend`：`/api/match` 匹配接口、`/api/icons/:library/:style/:name.svg` SVG 代理接口、内存缓存。
-- `shared`：匹配类型、图标库与风格配置、提示词预设、各图标库本地 catalog。
-- 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> 本地兜底匹配`。
+- `frontend`：SVG 匹配工作台、品牌 Banner、结果卡片网格、图标详情弹窗、设置弹窗、整组 SVG ZIP 导出、开发期请求反馈与来源统计。
+- `backend`：`/api/match` 匹配接口、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
+- `shared`：匹配类型、图标库与风格配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
+- 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。
 - 多图标库切换：当前支持 `Lucide`、`Heroicons`、`Phosphor`、`Tabler` 的已接入风格组合。
-- LLM 配置：支持在前端设置 `baseURL`、`apiKey`、`model`、`systemPrompt`，并持久化到本地。
+- LLM 配置：支持前端本地持久化 `baseURL`、`apiKey`、`model`、`systemPrompt`；也支持后端 `LLM_*` 环境变量兜底与 BYOK 共存。
 
 ## 技术栈（当前实现）
 
@@ -141,10 +141,12 @@ corepack pnpm catalog:names
 
 ## 下一步
 
+- 把 AI 生成结果正式接入当前工作台，并补齐生成态预览与基础操作。
+- 为生成图标与导出链路加入尺寸调节能力，支持预设尺寸与交互式调整。
 - 扩充多图标库 catalog，减少未命中与误命中。
 - 把 `systemPrompt` 继续拆成可组合策略块，降低手工修改成本。
 - 区分开发期与正式版调试能力，发布前移除请求调试面板。
-- 补强批量导出格式，目前仍以 MVP 下载链路为主。
+- 在已支持 SVG ZIP 的基础上继续补齐 Sprite、React/Vue 组件、PNG ZIP 等导出形式。
 
 详见 [`docs/PROGRESS.md`](./docs/PROGRESS.md) 与 [`docs/PRD.md`](./docs/PRD.md)。
 

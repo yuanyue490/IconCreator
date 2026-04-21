@@ -242,10 +242,19 @@ export function WorkbenchPage() {
 
           <div className="mt-6 flex justify-center">
             <div className="mode-seg">
-              <button className="is-disabled" disabled>
-                <Icon icon="lucide:sparkles" width="15" />
-                AI 生成
-              </button>
+              <span
+                className="mode-seg-soon"
+                tabIndex={0}
+                aria-label="AI 生成功能即将上线"
+              >
+                <span className="mode-seg-soon__bubble" role="tooltip">
+                  即将上线
+                </span>
+                <button className="is-disabled" type="button" disabled>
+                  <Icon icon="lucide:sparkles" width="15" />
+                  AI 生成
+                </button>
+              </span>
               <button
                 className={mode === "match" ? "is-active" : ""}
                 onClick={() => setMode("match")}
@@ -309,11 +318,6 @@ export function WorkbenchPage() {
                 {selectedLibraryConfig?.label ?? "未知图标库"} · {selectedStyleConfig?.label ?? "默认风格"}
               </span>
               <span className="text-xs text-[#5a5a5a]">当前词数 {wordCount}/20</span>
-              <span className="text-xs text-[#5a5a5a]">
-                {hasLlmConfig
-                  ? "已启用语义匹配"
-                  : "未配置模型，将先使用当前图标库的本地词典匹配"}
-              </span>
             </div>
 
             <button

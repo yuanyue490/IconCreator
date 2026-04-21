@@ -147,6 +147,52 @@ textarea {
   cursor: not-allowed;
 }
 
+/* 禁用按钮不接收指针事件，由外层接收 hover 以展示「即将上线」提示 */
+.mode-seg-soon {
+  position: relative;
+  display: inline-flex;
+  border-radius: 10px;
+  cursor: not-allowed;
+  outline: none;
+}
+
+.mode-seg-soon button[disabled] {
+  pointer-events: none;
+}
+
+.mode-seg-soon__bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #151515;
+  color: #c8c8c8;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-align: center;
+  box-shadow:
+    0 10px 30px -12px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  z-index: 30;
+}
+
+.mode-seg-soon:hover .mode-seg-soon__bubble,
+.mode-seg-soon:focus-visible .mode-seg-soon__bubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

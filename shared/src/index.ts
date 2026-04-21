@@ -6,8 +6,8 @@ export {
   MATCH_LIMIT,
   DEFAULT_MATCH_LIBRARY,
   DEFAULT_MATCH_STYLE,
-} from "./constants";
-export type { IconLibraryOption, IconLibraryStyleOption } from "./constants";
+} from "./constants.js";
+export type { IconLibraryOption, IconLibraryStyleOption } from "./constants.js";
 export type {
   AppSettings,
   IconCatalogEntry,
@@ -19,4 +19,4 @@ export type {
   MatchSource,
   MatchStatus,
   PromptPreset,
-} from "./types";
+} from "./types.js";

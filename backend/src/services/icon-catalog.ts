@@ -25,7 +25,8 @@ interface LibraryCatalog {
   names: string[];
 }
 
-const CATALOGS: Record<`${IconLibraryId}:${IconStyleId}`, LibraryCatalog> = {
+/** 仅包含当前工程已接入的 {库, 风格}，与全量 IconLibraryId×IconStyleId 笛卡尔积不同。 */
+const CATALOGS = {
   "lucide:linear": {
     aliases: lucideLinearAliasesJson as IconCatalogEntry[],
     names: lucideLinearNamesJson as string[],
@@ -50,7 +51,7 @@ const CATALOGS: Record<`${IconLibraryId}:${IconStyleId}`, LibraryCatalog> = {
     aliases: tablerLinearAliasesJson as IconCatalogEntry[],
     names: tablerLinearNamesJson as string[],
   },
-};
+} satisfies Record<string, LibraryCatalog>;
 
 function normalizeToken(value: string) {
   return value.trim().toLowerCase().replace(/[\s_\-]+/g, "");

@@ -1,4 +1,4 @@
-import type { IconLibraryId, IconStyleId } from "./types";
+import type { IconLibraryId, IconStyleId } from "./types.js";
 
 export interface IconLibraryStyleOption {
   id: IconStyleId;

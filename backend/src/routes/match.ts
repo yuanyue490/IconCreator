@@ -1,4 +1,9 @@
-import type { IconLibraryOption, IconLibraryStyleOption } from "@iconcraft/shared";
+import type {
+  IconLibraryId,
+  IconLibraryOption,
+  IconLibraryStyleOption,
+  IconStyleId,
+} from "@iconcraft/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 
@@ -6,11 +11,17 @@ import { ICON_LIBRARIES, MATCH_LIMIT, isSupportedLibraryStyle } from "@iconcraft
 
 import { matchIcons } from "../services/match-service.js";
 
-const libraryIds = ICON_LIBRARIES.map((library: IconLibraryOption) => library.id) as [string, ...string[]];
-const styleIds = [...new Set(ICON_LIBRARIES.flatMap((library: IconLibraryOption) => library.styles.map((style: IconLibraryStyleOption) => style.id)))] as [
-  string,
-  ...string[],
+const libraryIds = ICON_LIBRARIES.map((library: IconLibraryOption) => library.id) as [
+  IconLibraryId,
+  ...IconLibraryId[],
 ];
+const styleIds = [
+  ...new Set(
+    ICON_LIBRARIES.flatMap((library: IconLibraryOption) =>
+      library.styles.map((style: IconLibraryStyleOption) => style.id),
+    ),
+  ),
+] as [IconStyleId, ...IconStyleId[]];
 
 const matchRequestSchema = z.object({
   words: z.array(z.string().trim().min(1)).min(1).max(MATCH_LIMIT),

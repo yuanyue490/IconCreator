@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Icon } from "@iconify/react";
 import { BorderBeam } from "border-beam";
@@ -29,13 +29,20 @@ function parseWords(raw: string) {
     .slice(0, 20);
 }
 
+type ToastState = {
+  id: number;
+  message: string;
+  actionLabel?: string;
+  onAction?: () => void;
+};
+
 export function WorkbenchPage() {
   const [mode, setMode] = useState<"ai" | "match">("match");
   const [matchInput, setMatchInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState<IconLibraryId>(DEFAULT_MATCH_LIBRARY);
   const [selectedStyle, setSelectedStyle] = useState<IconStyleId>(DEFAULT_MATCH_STYLE);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [previewTarget, setPreviewTarget] = useState<{
     library: IconLibraryId;
@@ -43,25 +50,63 @@ export function WorkbenchPage() {
     iconName: string;
   } | null>(null);
   const [exportingSessionId, setExportingSessionId] = useState<string | null>(null);
+  /** 本次请求提交时的查询文案，避免加载中与输入框联动 */
+  const [matchInFlightLabel, setMatchInFlightLabel] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const settings = useSettingsStore();
   const sessions = useMatchHistoryStore((state) => state.sessions);
   const addSession = useMatchHistoryStore((state) => state.addSession);
+  const restoreSession = useMatchHistoryStore((state) => state.restoreSession);
   const removeSession = useMatchHistoryStore((state) => state.removeSession);
   const selectedLibraryConfig = getLibraryConfig(selectedLibrary);
+  const toastTimerRef = useRef<number | null>(null);
+  const pendingDeletedSessionRef = useRef<{ session: MatchHistorySession; index: number } | null>(null);
 
   const wordCount = useMemo(() => parseWords(matchInput).length, [matchInput]);
   const hasLlmConfig = Boolean(settings.baseURL.trim() && settings.model.trim());
   const hasHistory = sessions.length > 0;
   const safeExportSize = isPresetSize(settings.exportIconSizePx) ? settings.exportIconSizePx : 24;
 
-  function showToast(message: string) {
-    setToast(message);
-    window.clearTimeout((showToast as typeof showToast & { timer?: number }).timer);
-    (showToast as typeof showToast & { timer?: number }).timer = window.setTimeout(() => {
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
+
+  function dismissToast() {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+    setToast(null);
+  }
+
+  function showToast(message: string, options?: Pick<ToastState, "actionLabel" | "onAction">) {
+    if (toastTimerRef.current !== null) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+    if (!options?.actionLabel) {
+      pendingDeletedSessionRef.current = null;
+    }
+
+    setToast({
+      id: Date.now(),
+      message,
+      actionLabel: options?.actionLabel,
+      onAction: options?.onAction,
+    });
+
+    const hasAction = Boolean(options?.actionLabel && options?.onAction);
+    toastTimerRef.current = window.setTimeout(() => {
+      if (hasAction) {
+        pendingDeletedSessionRef.current = null;
+      }
       setToast(null);
-    }, 2200);
+      toastTimerRef.current = null;
+    }, hasAction ? 3600 : 2200);
   }
 
   async function handleMatch() {
@@ -71,6 +116,8 @@ export function WorkbenchPage() {
       return;
     }
 
+    const submittedLabel = words.join("、");
+    setMatchInFlightLabel(submittedLabel);
     setLoading(true);
     try {
       const response = await matchWords({
@@ -90,7 +137,7 @@ export function WorkbenchPage() {
       addSession({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         createdAt: Date.now(),
-        queryText: words.join("、"),
+        queryText: submittedLabel,
         library: response.library,
         style: response.style,
         items: response.items,
@@ -110,6 +157,7 @@ export function WorkbenchPage() {
       showToast(error instanceof Error ? error.message : "匹配失败");
     } finally {
       setLoading(false);
+      setMatchInFlightLabel(null);
     }
   }
 
@@ -156,14 +204,29 @@ export function WorkbenchPage() {
   }
 
   function handleRemoveSession(session: MatchHistorySession) {
-    if (!window.confirm("确定删除这一组匹配结果？")) {
+    const index = sessions.findIndex((item) => item.id === session.id);
+    if (index < 0) {
       return;
     }
+
+    pendingDeletedSessionRef.current = { session, index };
     removeSession(session.id);
     if (exportingSessionId === session.id) {
       setExportingSessionId(null);
     }
-    showToast("已删除该组");
+    showToast("已删除该组", {
+      actionLabel: "撤销",
+      onAction: () => {
+        const pendingDelete = pendingDeletedSessionRef.current;
+        if (!pendingDelete || pendingDelete.session.id !== session.id) {
+          return;
+        }
+
+        restoreSession(pendingDelete.session, pendingDelete.index);
+        pendingDeletedSessionRef.current = null;
+        showToast("已恢复该组");
+      },
+    });
   }
 
   return (
@@ -339,8 +402,8 @@ export function WorkbenchPage() {
                   <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-[#5a5a5a]">
                     正在匹配
                   </div>
-                  <div className="match-session__query" title={matchInput.trim()}>
-                    {matchInput.trim() || "准备处理当前输入..."}
+                  <div className="match-session__query" title={matchInFlightLabel ?? ""}>
+                    {matchInFlightLabel ?? "…"}
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
@@ -402,7 +465,23 @@ export function WorkbenchPage() {
         onToast={showToast}
       />
 
-      {toast ? <div className="toast">{toast}</div> : null}
+      {toast ? (
+        <div className="toast" key={toast.id} role="status" aria-live="polite">
+          <span>{toast.message}</span>
+          {toast.actionLabel && toast.onAction ? (
+            <button
+              type="button"
+              className="toast__action"
+              onClick={() => {
+                dismissToast();
+                toast.onAction?.();
+              }}
+            >
+              {toast.actionLabel}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

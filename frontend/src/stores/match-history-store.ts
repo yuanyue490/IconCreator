@@ -27,6 +27,7 @@ export interface MatchHistorySession {
 type MatchHistoryState = {
   sessions: MatchHistorySession[];
   addSession: (session: MatchHistorySession) => void;
+  restoreSession: (session: MatchHistorySession, index: number) => void;
   removeSession: (sessionId: string) => void;
   clearSessions: () => void;
 };
@@ -39,6 +40,19 @@ export const useMatchHistoryStore = create<MatchHistoryState>()(
         set((state) => ({
           sessions: [session, ...state.sessions].slice(0, MAX_HISTORY_SESSIONS),
         })),
+      restoreSession: (session, index) =>
+        set((state) => {
+          const nextSessions = [...state.sessions];
+          const safeIndex = Math.max(0, Math.min(index, nextSessions.length));
+          nextSessions.splice(safeIndex, 0, session);
+          return {
+            sessions: nextSessions
+              .filter((current, currentIndex, list) =>
+                list.findIndex((candidate) => candidate.id === current.id) === currentIndex,
+              )
+              .slice(0, MAX_HISTORY_SESSIONS),
+          };
+        }),
       removeSession: (sessionId) =>
         set((state) => ({
           sessions: state.sessions.filter((s) => s.id !== sessionId),

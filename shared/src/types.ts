@@ -18,6 +18,10 @@ export interface AppSettings {
   apiKey: string;
   model: string;
   systemPrompt: string;
+  /** 导出/复制时的 SVG 边长（px），不含 @2x 倍率 */
+  exportIconSizePx: number;
+  /** 单色：作用于 SVG 根 `color` 及 `currentColor` 链；与列表/弹窗里 Icon 预览一致 */
+  exportIconColor: string;
 }
 
 export interface MatchRequest {

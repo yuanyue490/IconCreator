@@ -4,6 +4,7 @@ import { getLibraryStyleConfig } from "@iconcraft/shared";
 import type { IconLibraryId, IconStyleId, MatchItem } from "@iconcraft/shared";
 
 import { copySvgToClipboard, downloadSvg } from "../lib/api";
+import { useSettingsStore } from "../stores/settings-store";
 
 interface MatchResultGridProps {
   library: IconLibraryId;
@@ -50,8 +51,11 @@ export function MatchResultGrid({
   onPreview,
   onToast,
 }: MatchResultGridProps) {
+  const exportIconColor = useSettingsStore((s) => s.exportIconColor);
+  const exportIconSizePx = useSettingsStore((s) => s.exportIconSizePx);
   const styleConfig = getLibraryStyleConfig(library, style);
   const collection = styleConfig?.collection ?? "lucide";
+  const cardIconSize = Math.min(44, Math.max(16, exportIconSizePx));
 
   if (loading) {
     return (
@@ -128,11 +132,11 @@ export function MatchResultGrid({
               )}
             </div>
 
-            <div className="match-card-icon">
+            <div className="match-card-icon" style={{ color: exportIconColor }}>
               {matched && iconName ? (
-                <Icon icon={`${collection}:${iconName}`} width="44" />
+                <Icon icon={`${collection}:${iconName}`} width={cardIconSize} height={cardIconSize} />
               ) : (
-                <Icon icon="lucide:help-circle" width="44" />
+                <Icon icon="lucide:help-circle" width={cardIconSize} height={cardIconSize} />
               )}
             </div>
 

@@ -7,7 +7,6 @@ import {
   DEFAULT_MATCH_STYLE,
   ICON_LIBRARIES,
   getLibraryConfig,
-  getLibraryStyleConfig,
   type IconLibraryId,
   type IconStyleId,
 } from "@iconcraft/shared";
@@ -16,6 +15,7 @@ import { MatchHistorySection } from "../components/match-history-section";
 import { IconDetailDialog } from "../components/icon-detail-dialog";
 import { MatchResultGrid } from "../components/match-result-grid";
 import { SettingsDialog } from "../components/settings-dialog";
+import { EXPORT_SIZE_PRESETS, isPresetSize } from "../lib/export-appearance";
 import { downloadSvgBundle, matchWords } from "../lib/api";
 import type { MatchHistorySession } from "../stores/match-history-store";
 import { useMatchHistoryStore } from "../stores/match-history-store";
@@ -49,11 +49,11 @@ export function WorkbenchPage() {
   const sessions = useMatchHistoryStore((state) => state.sessions);
   const addSession = useMatchHistoryStore((state) => state.addSession);
   const selectedLibraryConfig = getLibraryConfig(selectedLibrary);
-  const selectedStyleConfig = getLibraryStyleConfig(selectedLibrary, selectedStyle);
 
   const wordCount = useMemo(() => parseWords(matchInput).length, [matchInput]);
   const hasLlmConfig = Boolean(settings.baseURL.trim() && settings.model.trim());
   const hasHistory = sessions.length > 0;
+  const safeExportSize = isPresetSize(settings.exportIconSizePx) ? settings.exportIconSizePx : 24;
 
   function showToast(message: string) {
     setToast(message);
@@ -260,9 +260,6 @@ export function WorkbenchPage() {
                   </option>
                 ))}
               </select>
-              <span className="chip is-active">
-                {selectedLibraryConfig?.label ?? "未知图标库"} · {selectedStyleConfig?.label ?? "默认风格"}
-              </span>
               <span className="text-xs text-[#5a5a5a]">当前词数 {wordCount}/20</span>
             </div>
 
@@ -277,6 +274,50 @@ export function WorkbenchPage() {
           </div>
         </section>
         </BorderBeam>
+
+        <div
+          className="workbench-export-tuning"
+          role="group"
+          aria-label="SVG 导出与预览外观"
+        >
+          <span className="workbench-export-tuning__title">全局样式修改</span>
+          <span className="workbench-export-tuning__k">大小</span>
+          <select
+            className="workbench-export-tuning__select"
+            value={safeExportSize}
+            onChange={(event) =>
+              settings.setField("exportIconSizePx", Number.parseInt(event.target.value, 10) || 24)
+            }
+            aria-label="导出与预览的图标边长（像素）"
+          >
+            {EXPORT_SIZE_PRESETS.map((px) => (
+              <option key={px} value={px}>
+                {px}px
+              </option>
+            ))}
+          </select>
+          <span className="workbench-export-tuning__k">颜色</span>
+          <input
+            type="color"
+            className="workbench-export-tuning__color"
+            value={
+              /^#[0-9a-fA-F]{6}$/.test(settings.exportIconColor)
+                ? settings.exportIconColor
+                : "#fafafa"
+            }
+            onChange={(event) => settings.setField("exportIconColor", event.target.value)}
+            aria-label="图标单色"
+          />
+          <input
+            type="text"
+            className="workbench-export-tuning__hex"
+            value={settings.exportIconColor}
+            onChange={(event) => settings.setField("exportIconColor", event.target.value)}
+            placeholder="#fafafa"
+            spellCheck={false}
+            aria-label="颜色十六进制"
+          />
+        </div>
 
         <section className="mt-6">
           {loading ? (

@@ -15,6 +15,12 @@
 - **文档**：`docs/ICONIFY.md` 排障用「主域 + 具体 `.svg` 路径」两步探活，避免误用集合级 URL 产生假 404。
 - **杂项**：Banner 标题 `hero-caption-title` 字重 500（`app.css`）。
 
+- **SVG 导出外观（工作台）**：
+  - **设置弹窗**（`SettingsDialog`）内不再放「边长 / 单色」等导出项，仅保留 LLM（Base URL、Key、Model、System Prompt）相关配置；`exportIconSizePx`、`exportIconColor` 仍由 **`useSettingsStore`（persist）** 存取，与预览、复制、下载、ZIP 的导出逻辑一致（见 `getSvgExportOptions` / `applySvgExportOptions`）。
+  - **工作台**（`workbench.tsx`）：`BorderBeam` **仅**包裹主输入与匹配区卡片（`section.surface-raised`）；**「SVG 样式」**为 **独立一行**，放在 `</BorderBeam>` 之后、与主卡片**同级**，避免与卡片同包在一个 `flex` 容器里。
+  - **控件布局**：单条 `div.workbench-export-tuning` 内横向排布（标题「SVG 样式」+ 边长下拉里预设 px + 取色 + hex 输入），**不展示**副文案「影响预览、复制、下载与 ZIP」；样式在 `app.css`（`workbench-export-tuning` 系列，视觉层级比主卡片弱一级）。
+  - **边长预设**（`export-appearance.ts` · `EXPORT_SIZE_PRESETS`）：**16、20、24、32、40、48、64** px 共七档，默认 **24**；`isPresetSize` 判定，持久化值不在预设内时回退 **24px**（与下拉里 `|| 24` 一致）。
+
 ---
 
 ## 一、2026-04-21 开发进展

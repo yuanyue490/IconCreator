@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Icon } from "@iconify/react";
 import { getLibraryStyleConfig } from "@iconcraft/shared";
 import type { IconLibraryId, IconStyleId } from "@iconcraft/shared";
 
 import { copySvgToClipboard, downloadSvg, fetchSvgText } from "../lib/api";
+import { applySvgExportOptions } from "../lib/svg-export";
+import { useSettingsStore } from "../stores/settings-store";
 
 interface IconDetailDialogProps {
   library: IconLibraryId;
@@ -25,8 +27,24 @@ export function IconDetailDialog({
 }: IconDetailDialogProps) {
   const [svgText, setSvgText] = useState("");
   const [loading, setLoading] = useState(false);
+  const exportIconSizePx = useSettingsStore((s) => s.exportIconSizePx);
+  const exportIconColor = useSettingsStore((s) => s.exportIconColor);
   const styleConfig = getLibraryStyleConfig(library, style);
   const collection = styleConfig?.collection ?? "lucide";
+
+  const exportOptions = useMemo(
+    () => ({ sizePx: exportIconSizePx, color: exportIconColor }),
+    [exportIconColor, exportIconSizePx],
+  );
+
+  const displaySvg = useMemo(() => {
+    if (!svgText) {
+      return "";
+    }
+    return applySvgExportOptions(svgText, exportOptions);
+  }, [exportOptions, svgText]);
+
+  const previewIconPx = Math.min(120, Math.max(32, exportIconSizePx * 2));
 
   useEffect(() => {
     if (!open || !iconName) return;
@@ -61,7 +79,9 @@ export function IconDetailDialog({
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0 pr-1">
             <div className="text-lg font-semibold">{iconName}</div>
-            <div className="mt-1 text-sm text-[#8a8a8a]">{collection}: 真实 SVG 资源预览</div>
+            <div className="mt-1 text-sm text-[#8a8a8a]">
+              {collection}: 预览与下方代码与「设置」中的导出边长、单色一致
+            </div>
           </div>
           <button
             type="button"
@@ -75,8 +95,11 @@ export function IconDetailDialog({
 
         <div className="grid min-w-0 gap-5 md:grid-cols-[240px_1fr]">
           <div className="surface min-w-0 rounded-2xl p-5">
-            <div className="flex aspect-square items-center justify-center rounded-xl bg-[#0e0e0e] text-white">
-              <Icon icon={`${collection}:${iconName}`} width="120" />
+            <div
+              className="flex aspect-square items-center justify-center rounded-xl bg-[#0e0e0e]"
+              style={{ color: exportIconColor }}
+            >
+              <Icon icon={`${collection}:${iconName}`} width={previewIconPx} height={previewIconPx} />
             </div>
           </div>
 
@@ -106,7 +129,7 @@ export function IconDetailDialog({
             </div>
 
             <pre className="dialog-svg-code surface min-h-0 flex-1 rounded-2xl p-4 text-xs leading-6 text-[#a0a0a0]">
-              {loading ? "正在加载 SVG..." : svgText || "暂无 SVG 内容"}
+              {loading ? "正在加载 SVG..." : displaySvg || "暂无 SVG 内容"}
             </pre>
           </div>
         </div>

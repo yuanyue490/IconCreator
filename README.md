@@ -50,7 +50,7 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈。
+- `frontend`：SVG 匹配工作台、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈；**工作台「SVG 样式」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。
 - `backend`：`/api/match` 匹配接口、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
 - `shared`：匹配类型、图标库与风格配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。

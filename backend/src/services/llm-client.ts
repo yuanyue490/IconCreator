@@ -33,6 +33,9 @@ export function resolveLlmConfig(llm?: Partial<AppSettings>): AppSettings {
     apiKey: pick(llm?.apiKey, process.env.LLM_API_KEY),
     model: pick(llm?.model, process.env.LLM_MODEL),
     systemPrompt: pick(llm?.systemPrompt, process.env.LLM_SYSTEM_PROMPT),
+    // 与 shared `AppSettings` 对齐；匹配请求体不会传这两项，仅占位满足类型
+    exportIconSizePx: 24,
+    exportIconColor: "#fafafa",
   };
 }
 

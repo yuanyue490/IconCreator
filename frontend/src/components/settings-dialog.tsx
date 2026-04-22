@@ -25,9 +25,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       <div className="dialog-panel surface-elevated p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0 pr-1">
-            <div className="text-lg font-semibold">模型配置</div>
+            <div className="text-lg font-semibold">设置</div>
             <div className="mt-1 text-sm text-[#8a8a8a]">
-              MVP 先使用本地存储。这里的配置会随浏览器缓存保存，不进入服务器。
+              LLM 相关项保存在本机；站长密钥可仅配置在后端环境变量。详见 README。
             </div>
           </div>
           <button

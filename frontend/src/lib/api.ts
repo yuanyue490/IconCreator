@@ -2,6 +2,17 @@ import JSZip from "jszip";
 
 import type { AppSettings, MatchRequest, MatchResponse } from "@iconcraft/shared";
 
+import { applySvgExportOptions } from "./svg-export";
+import { useSettingsStore } from "../stores/settings-store";
+
+function getSvgExportOptions() {
+  const s = useSettingsStore.getState();
+  return {
+    sizePx: s.exportIconSizePx,
+    color: s.exportIconColor,
+  };
+}
+
 export async function matchWords(input: Omit<MatchRequest, "llm"> & { llm?: Partial<AppSettings> }) {
   const response = await fetch("/api/match", {
     method: "POST",
@@ -30,12 +41,14 @@ export async function fetchSvgText(library: string, style: string, name: string)
 }
 
 export async function copySvgToClipboard(library: string, style: string, name: string) {
-  const svg = await fetchSvgText(library, style, name);
+  const raw = await fetchSvgText(library, style, name);
+  const svg = applySvgExportOptions(raw, getSvgExportOptions());
   await navigator.clipboard.writeText(svg);
 }
 
 export async function downloadSvg(library: string, style: string, name: string) {
-  const svg = await fetchSvgText(library, style, name);
+  const raw = await fetchSvgText(library, style, name);
+  const svg = applySvgExportOptions(raw, getSvgExportOptions());
   const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -113,7 +126,9 @@ export async function downloadSvgBundle(
       fileName = `${baseName}-${dedupeIndex}.svg`;
     }
     usedFileNames.add(fileName);
-    folder.file(fileName, result.svg);
+    const opts = getSvgExportOptions();
+    const processed = applySvgExportOptions(result.svg, opts);
+    folder.file(fileName, processed);
     succeeded += 1;
   }
 

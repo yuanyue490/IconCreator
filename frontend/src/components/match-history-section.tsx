@@ -107,18 +107,14 @@ export function MatchHistorySection({
             <span className="match-session__time">{formatTimestamp(session.createdAt)}</span>
           </div>
           <div className="match-session__meta">
-            <span className="font-medium">
+            <span>
               {libraryConfig?.label ?? "未知图标库"} · {styleConfig?.label ?? "默认风格"}
             </span>
-            <span className="text-[#5a5a5a]">·</span>
-            <span className="font-medium">
-              命中 {session.meta.matched}/{session.meta.total}
-            </span>
-            <span className="text-[#5a5a5a]">·</span>
-            <span className="font-mono text-[#a0a0a0]">{session.meta.durationMs} ms</span>
-            <span className="text-[#5a5a5a]">·</span>
-            <span className="font-mono text-[#a0a0a0]">{buildPipelineLabel(session)}</span>
-            <span className="text-[#5a5a5a]">·</span>
+            <span className="match-session__meta-sep">·</span>
+            <span>{session.meta.durationMs} ms</span>
+            <span className="match-session__meta-sep">·</span>
+            <span>{buildPipelineLabel(session)}</span>
+            <span className="match-session__meta-sep">·</span>
             <span className="match-info__text">{compactSummary}</span>
             {compactStats.map((stat) => (
               <span key={stat.key} className={`match-stat${stat.tone ? ` match-stat--${stat.tone}` : ""}`}>

@@ -31,6 +31,8 @@ function buildDefaultSettings(): AppSettings {
     model: import.meta.env.VITE_DEFAULT_LLM_MODEL?.trim() ?? "",
     systemPrompt:
       import.meta.env.VITE_DEFAULT_LLM_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT,
+    exportIconSizePx: 24,
+    exportIconColor: "#fafafa",
   };
 }
 
@@ -58,12 +60,14 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "iconcraft-settings",
-      version: 5,
-      partialize: ({ baseURL, apiKey, model, systemPrompt }) => ({
+      version: 6,
+      partialize: ({ baseURL, apiKey, model, systemPrompt, exportIconSizePx, exportIconColor }) => ({
         baseURL,
         apiKey,
         model,
         systemPrompt,
+        exportIconSizePx,
+        exportIconColor,
       }),
       migrate: (persistedState) => {
         const persisted = (persistedState ?? {}) as Partial<AppSettings>;
@@ -72,6 +76,16 @@ export const useSettingsStore = create<SettingsState>()(
           return defaultSettings;
         }
 
+        const size =
+          typeof persisted.exportIconSizePx === "number" &&
+          Number.isFinite(persisted.exportIconSizePx)
+            ? persisted.exportIconSizePx
+            : defaultSettings.exportIconSizePx;
+        const color =
+          typeof persisted.exportIconColor === "string" && persisted.exportIconColor.trim()
+            ? persisted.exportIconColor.trim()
+            : defaultSettings.exportIconColor;
+
         return {
           ...defaultSettings,
           ...persisted,
@@ -79,6 +93,8 @@ export const useSettingsStore = create<SettingsState>()(
           apiKey: persisted.apiKey?.trim() || defaultSettings.apiKey,
           model: persisted.model?.trim() || defaultSettings.model,
           systemPrompt: persisted.systemPrompt?.trim() || defaultSettings.systemPrompt,
+          exportIconSizePx: size,
+          exportIconColor: color,
         };
       },
     },

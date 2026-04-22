@@ -48,6 +48,7 @@ export function WorkbenchPage() {
   const settings = useSettingsStore();
   const sessions = useMatchHistoryStore((state) => state.sessions);
   const addSession = useMatchHistoryStore((state) => state.addSession);
+  const removeSession = useMatchHistoryStore((state) => state.removeSession);
   const selectedLibraryConfig = getLibraryConfig(selectedLibrary);
 
   const wordCount = useMemo(() => parseWords(matchInput).length, [matchInput]);
@@ -152,6 +153,17 @@ export function WorkbenchPage() {
     } finally {
       setExportingSessionId(null);
     }
+  }
+
+  function handleRemoveSession(session: MatchHistorySession) {
+    if (!window.confirm("确定删除这一组匹配结果？")) {
+      return;
+    }
+    removeSession(session.id);
+    if (exportingSessionId === session.id) {
+      setExportingSessionId(null);
+    }
+    showToast("已删除该组");
   }
 
   return (
@@ -355,6 +367,7 @@ export function WorkbenchPage() {
                   session={session}
                   exporting={exportingSessionId === session.id}
                   onExport={(currentSession) => void handleExportBundle(currentSession)}
+                  onDelete={handleRemoveSession}
                   onPreview={(currentSession, iconName) =>
                     setPreviewTarget({
                       library: currentSession.library,

@@ -172,6 +172,23 @@ textarea {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+/* 破坏性操作：与默认 ghost 同级，仅用红系边框与文字提示风险 */
+.btn-ghost.btn-ghost--danger {
+  color: #f87171;
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.35);
+}
+
+.btn-ghost.btn-ghost--danger:hover:not(:disabled) {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.5);
+}
+
+.btn-ghost.btn-ghost--danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .btn-subtle {
   color: #a0a0a0;
   transition: all 0.18s ease;
@@ -311,7 +328,7 @@ textarea {
   padding: 0 8px;
   border-radius: 9999px;
   color: #b4b4b4;
-  font-size: inherit;
+  font-size: 12.5px;
   line-height: inherit;
   background: rgba(255, 255, 255, 0.03);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
@@ -404,7 +421,9 @@ textarea {
 
 .match-session__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
+  gap: 8px;
 }
 
 /* 轻量 hover tooltip：用于收起不重要的长文案说明，避免 UI 噪声。 */
@@ -633,7 +652,7 @@ textarea {
 
 .match-card-label {
   text-align: center;
-  font-size: 13.5px;
+  font-size: 16px;
   font-weight: 500;
 }
 

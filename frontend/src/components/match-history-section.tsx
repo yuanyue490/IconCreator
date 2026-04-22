@@ -8,6 +8,7 @@ interface MatchHistorySectionProps {
   session: MatchHistorySession;
   exporting: boolean;
   onExport: (session: MatchHistorySession) => void;
+  onDelete: (session: MatchHistorySession) => void;
   onPreview: (session: MatchHistorySession, iconName: string) => void;
   onToast: (message: string) => void;
 }
@@ -86,6 +87,7 @@ export function MatchHistorySection({
   session,
   exporting,
   onExport,
+  onDelete,
   onPreview,
   onToast,
 }: MatchHistorySectionProps) {
@@ -132,12 +134,23 @@ export function MatchHistorySection({
 
         <div className="match-session__actions">
           <button
+            type="button"
             className="btn-ghost inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm"
             onClick={() => onExport(session)}
             disabled={exporting}
           >
             <Icon icon={exporting ? "lucide:loader-circle" : "lucide:archive"} width="14" />
             {exporting ? "打包中..." : "导出这组"}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost btn-ghost--danger inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm"
+            onClick={() => onDelete(session)}
+            disabled={exporting}
+            aria-label="删除这组匹配结果"
+          >
+            <Icon icon="lucide:trash-2" width="14" />
+            删除
           </button>
         </div>
       </div>

@@ -257,3 +257,17 @@ When refining existing screens generated with this design system:
 3. Ensure card elevation uses the multi-layered shadow stack, not CSS borders
 4. Confirm section spacing is generous (80px+) — if sections feel cramped, add more space
 5. The overall tone should feel like a clean, professional scheduling tool — monochrome confidence without any decorative flourishes
+
+---
+
+## 10. 附录：图标大厨工作台（暗色）实现备忘
+
+本文档上文为 Cal.com 参考；**工程内**为暗色工作台（画布约 `#0a0a0a`、主文 `#fafafa`），下列为与实现强相关的约定，避免再踩坑。
+
+| 主题 | 约定 |
+| --- | --- |
+| 全屏弹窗层级 | `.dialog-backdrop` / `.dialog-panel` 使用 **z-index 5000+**，高于输入区 `border-beam` 等装饰层；**Toast** 高于弹层，保证提示可见。 |
+| 详情弹窗 SVG 代码 | 使用 `.dialog-svg-code`：`pre-wrap` + `overflow-wrap` + 禁止横向溢出，长 XML 在固定宽度内换行。 |
+| 模态标题栏 | 标题为**多行**时，工具条用 `items-start`，关闭按钮 `inline-flex` 居中对齐，避免垂直居中导致「飘在中间」。 |
+| 来源徽标 | 汇总行与结果卡片统一 **`match-stat`**（含 `词典` / `LLM` / `兜底` / `未匹配` 语义色）。 |
+| 匹配历史 | 每组头部**两行**：主信息 + 元数据/统计；导出为**次按钮**（`btn-ghost`），避免抢主内容。 |

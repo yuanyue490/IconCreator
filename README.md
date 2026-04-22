@@ -24,10 +24,10 @@ IconCreator/
 ├── frontend/            # React + Vite + TS 前端工作台
 │   ├── .env.local       # 本地默认 LLM 配置（不入库）
 │   └── src/
-│       ├── components/  # 设置弹窗 / 结果网格 / 图标详情
+│       ├── components/  # 设置 / 结果网格 / 历史分组 / 图标详情
 │       ├── lib/         # API 客户端与下载复制逻辑
 │       ├── pages/       # Workbench 主页面
-│       ├── stores/      # Zustand 设置持久化
+│       ├── stores/      # Zustand：设置、匹配历史（均支持 persist）
 │       └── styles/      # 全局样式
 │
 ├── backend/             # Node.js + Fastify + TS 后端
@@ -50,12 +50,13 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、品牌 Banner、结果卡片网格、图标详情弹窗、设置弹窗、整组 SVG ZIP 导出、开发期请求反馈与来源统计。
+- `frontend`：SVG 匹配工作台、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈。
 - `backend`：`/api/match` 匹配接口、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
 - `shared`：匹配类型、图标库与风格配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。
 - 多图标库切换：当前支持 `Lucide`、`Heroicons`、`Phosphor`、`Tabler` 的已接入风格组合。
 - LLM 配置：支持前端本地持久化 `baseURL`、`apiKey`、`model`、`systemPrompt`；也支持后端 `LLM_*` 环境变量兜底与 BYOK 共存。
+- **UI 与层级**：全屏弹窗（`.dialog-backdrop` / `.dialog-panel`）使用较高 `z-index`，保证盖过输入区 `border-beam` 等装饰层；详情弹窗内 SVG 源码区为预格式化换行，避免横向撑出滚动条（见 `docs/DESIGN.md` 附录）。
 
 ## 技术栈（当前实现）
 
@@ -139,16 +140,9 @@ corepack pnpm catalog:names
 
 > 说明：当前 catalog 仍以首批高频语义词映射为主，后续会继续扩充为更完整的图标索引。
 
-## 下一步
+## 后续规划
 
-- 把 AI 生成结果正式接入当前工作台，并补齐生成态预览与基础操作。
-- 为生成图标与导出链路加入尺寸调节能力，支持预设尺寸与交互式调整。
-- 扩充多图标库 catalog，减少未命中与误命中。
-- 把 `systemPrompt` 继续拆成可组合策略块，降低手工修改成本。
-- 区分开发期与正式版调试能力，发布前移除请求调试面板。
-- 在已支持 SVG ZIP 的基础上继续补齐 Sprite、React/Vue 组件、PNG ZIP 等导出形式。
-
-详见 [`docs/PROGRESS.md`](./docs/PROGRESS.md) 与 [`docs/PRD.md`](./docs/PRD.md)。
+详见 [`docs/PROGRESS.md`](./docs/PROGRESS.md) 与 [`docs/PRD.md`](./docs/PRD.md)。核心方向包括：AI 生成接入、导出尺寸、catalog 扩充、`systemPrompt` 模块化、正式版前收敛调试能力、更多导出格式等。
 
 ## 资产授权说明
 

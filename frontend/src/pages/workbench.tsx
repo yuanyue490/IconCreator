@@ -10,35 +10,16 @@ import {
   getLibraryStyleConfig,
   type IconLibraryId,
   type IconStyleId,
-  type MatchItem,
-  type MatchResponse,
 } from "@iconcraft/shared";
 
+import { MatchHistorySection } from "../components/match-history-section";
 import { IconDetailDialog } from "../components/icon-detail-dialog";
 import { MatchResultGrid } from "../components/match-result-grid";
 import { SettingsDialog } from "../components/settings-dialog";
 import { downloadSvgBundle, matchWords } from "../lib/api";
+import type { MatchHistorySession } from "../stores/match-history-store";
+import { useMatchHistoryStore } from "../stores/match-history-store";
 import { useSettingsStore } from "../stores/settings-store";
-
-const defaultMeta: MatchResponse["meta"] = {
-  matched: 0,
-  total: 0,
-  durationMs: 0,
-  usedLlm: false,
-  debug: {
-    llm: {
-      enabledByConfig: false,
-      attempted: false,
-      requestUrl: null,
-      model: null,
-      authHeaderPresent: false,
-      upstreamStatus: null,
-      success: false,
-      error: null,
-      upstreamBody: null,
-    },
-  },
-};
 
 function parseWords(raw: string) {
   return raw
@@ -52,76 +33,27 @@ export function WorkbenchPage() {
   const [mode, setMode] = useState<"ai" | "match">("match");
   const [matchInput, setMatchInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState<MatchItem[]>([]);
-  const [meta, setMeta] = useState<MatchResponse["meta"]>(defaultMeta);
   const [selectedLibrary, setSelectedLibrary] = useState<IconLibraryId>(DEFAULT_MATCH_LIBRARY);
   const [selectedStyle, setSelectedStyle] = useState<IconStyleId>(DEFAULT_MATCH_STYLE);
-  const [resultLibrary, setResultLibrary] = useState<IconLibraryId>(DEFAULT_MATCH_LIBRARY);
-  const [resultStyle, setResultStyle] = useState<IconStyleId>(DEFAULT_MATCH_STYLE);
   const [toast, setToast] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [previewIcon, setPreviewIcon] = useState<string | null>(null);
-  const [exporting, setExporting] = useState(false);
+  const [previewTarget, setPreviewTarget] = useState<{
+    library: IconLibraryId;
+    style: IconStyleId;
+    iconName: string;
+  } | null>(null);
+  const [exportingSessionId, setExportingSessionId] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const settings = useSettingsStore();
+  const sessions = useMatchHistoryStore((state) => state.sessions);
+  const addSession = useMatchHistoryStore((state) => state.addSession);
   const selectedLibraryConfig = getLibraryConfig(selectedLibrary);
   const selectedStyleConfig = getLibraryStyleConfig(selectedLibrary, selectedStyle);
-  const resultLibraryConfig = getLibraryConfig(resultLibrary);
-  const resultStyleConfig = getLibraryStyleConfig(resultLibrary, resultStyle);
 
   const wordCount = useMemo(() => parseWords(matchInput).length, [matchInput]);
   const hasLlmConfig = Boolean(settings.baseURL.trim() && settings.model.trim());
-  const sourceSummary = useMemo(() => {
-    return items.reduce(
-      (acc, item) => {
-        if (item.status !== "matched") {
-          acc.unmatched += 1;
-          return acc;
-        }
-
-        if (item.source === "catalog") acc.catalog += 1;
-        else if (item.source === "llm") acc.llm += 1;
-        else if (item.source === "fallback") acc.fallback += 1;
-        return acc;
-      },
-      { catalog: 0, llm: 0, fallback: 0, unmatched: 0 },
-    );
-  }, [items]);
-  const hasMatchResult = meta.total > 0;
-  const hasMatchedIcons = useMemo(
-    () => items.some((item) => item.status === "matched" && Boolean(item.iconName)),
-    [items],
-  );
-  const matchSummaryText = useMemo(() => {
-    if (!hasMatchResult) {
-      return "";
-    }
-
-    const unmatchedText =
-      sourceSummary.unmatched > 0 ? `，仍有 ${sourceSummary.unmatched} 个未匹配` : "，全部已匹配";
-    const llmText = meta.usedLlm
-      ? "已启用语义扩展（LLM）补充命中。"
-      : "本次仅使用本地词典与本地兜底。";
-
-    return `本次共处理 ${meta.total} 个词，命中 ${meta.matched} 个${unmatchedText}。${llmText}`;
-  }, [hasMatchResult, meta.matched, meta.total, meta.usedLlm, sourceSummary.unmatched]);
-  const requestFeedbackText = useMemo(() => {
-    const modelName = (meta.debug.llm.model ?? settings.model.trim()) || "未识别模型";
-    if (!hasMatchResult) return "";
-    if (!meta.usedLlm) return "反馈：本次未触发语义匹配（LLM），仅使用本地匹配链路。";
-    if (!meta.debug.llm.attempted) return `反馈：已启用语义匹配（模型：${modelName}），但本次无需发起请求。`;
-    if (meta.debug.llm.success) return `反馈：语义匹配请求成功（模型：${modelName}）。`;
-    return `反馈：语义匹配请求未成功（模型：${modelName}，${meta.debug.llm.error ?? "未知原因"}）。`;
-  }, [
-    hasMatchResult,
-    meta.debug.llm.attempted,
-    meta.debug.llm.error,
-    meta.debug.llm.model,
-    meta.debug.llm.success,
-    meta.usedLlm,
-    settings.model,
-  ]);
+  const hasHistory = sessions.length > 0;
 
   function showToast(message: string) {
     setToast(message);
@@ -154,10 +86,24 @@ export function WorkbenchPage() {
           : undefined,
       });
 
-      setItems(response.items);
-      setMeta(response.meta);
-      setResultLibrary(response.library);
-      setResultStyle(response.style);
+      addSession({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: Date.now(),
+        queryText: words.join("、"),
+        library: response.library,
+        style: response.style,
+        items: response.items,
+        meta: {
+          total: response.meta.total,
+          matched: response.meta.matched,
+          durationMs: response.meta.durationMs,
+          usedLlm: response.meta.usedLlm,
+          llmAttempted: response.meta.debug.llm.attempted,
+          llmSuccess: response.meta.debug.llm.success,
+          llmModel: (response.meta.debug.llm.model ?? settings.model.trim()) || null,
+          llmError: response.meta.debug.llm.error,
+        },
+      });
       showToast(response.meta.usedLlm ? "已完成语义匹配" : "已完成本地词典匹配");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "匹配失败");
@@ -181,8 +127,8 @@ export function WorkbenchPage() {
     setSelectedStyle(nextStyle);
   }
 
-  async function handleExportBundle() {
-    const names = items
+  async function handleExportBundle(session: MatchHistorySession) {
+    const names = session.items
       .filter((item) => item.status === "matched" && item.iconName)
       .map((item) => item.iconName as string);
 
@@ -191,9 +137,9 @@ export function WorkbenchPage() {
       return;
     }
 
-    setExporting(true);
+    setExportingSessionId(session.id);
     try {
-      const result = await downloadSvgBundle(resultLibrary, resultStyle, names);
+      const result = await downloadSvgBundle(session.library, session.style, names);
       if (result.failures.length === 0) {
         showToast(`已导出 ${result.succeeded} 个图标到 ZIP`);
       } else {
@@ -204,7 +150,7 @@ export function WorkbenchPage() {
     } catch (error) {
       showToast(error instanceof Error ? error.message : "打包失败");
     } finally {
-      setExporting(false);
+      setExportingSessionId(null);
     }
   }
 
@@ -333,91 +279,72 @@ export function WorkbenchPage() {
         </BorderBeam>
 
         <section className="mt-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
-              <span className="text-[#5a5a5a]">来源</span>
-              <span className="font-medium">
-                {resultLibraryConfig?.label ?? "未知图标库"} · {resultStyleConfig?.label ?? "默认风格"}
-              </span>
-              <span className="text-[#5a5a5a]">·</span>
-              <span className="text-[#5a5a5a]">匹配</span>
-              <span className="font-medium">
-                {meta.matched}/{meta.total}
-              </span>
-              <span className="text-[#5a5a5a]">·</span>
-              <span className="text-[#5a5a5a]">耗时</span>
-              <span className="font-mono text-[#a0a0a0]">{meta.durationMs} ms</span>
-              <span className="text-[#5a5a5a]">·</span>
-              <span className="font-mono text-[#a0a0a0]">
-                {meta.usedLlm ? "catalog -> LLM -> fallback" : "catalog only"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {hasMatchedIcons ? (
-                <button
-                  className="btn-primary inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm"
-                  onClick={() => void handleExportBundle()}
-                  disabled={exporting}
-                >
-                  <Icon
-                    icon={exporting ? "lucide:loader-circle" : "lucide:archive"}
-                    width="14"
-                  />
-                  {exporting ? "打包中..." : "导出全部"}
-                </button>
-              ) : null}
-            </div>
-          </div>
-
-          {hasMatchResult ? (
-            <div className="match-info mb-4 rounded-2xl px-1 py-1">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-[#5a5a5a]">
-                  匹配说明
-                </span>
-                <span
-                  className="info-tooltip"
-                  tabIndex={0}
-                  role="button"
-                  aria-label="查看匹配处理顺序说明"
-                >
-                  <Icon icon="lucide:circle-help" width="13" />
-                  <span className="info-tooltip__bubble">
-                    处理顺序：先查本地词典；词典未命中且已配置模型时，再交给 LLM 做语义匹配；
-                    若模型结果不存在或不可信，再走本地兜底；仍然失败则标记为未匹配，不会强行硬猜。
-                  </span>
-                </span>
+          {loading ? (
+            <div className="match-session match-session--loading">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-[#5a5a5a]">
+                    正在匹配
+                  </div>
+                  <div className="match-session__query" title={matchInput.trim()}>
+                    {matchInput.trim() || "准备处理当前输入..."}
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
+                  <Icon icon="lucide:loader-circle" width="15" />
+                  正在生成新结果组
+                </div>
               </div>
-              <p className="match-info__text">{matchSummaryText}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="source-pill source-pill--catalog">本地词典 {sourceSummary.catalog}</span>
-                <span className="source-pill source-pill--llm">LLM 语义 {sourceSummary.llm}</span>
-                <span className="source-pill source-pill--fallback">本地兜底 {sourceSummary.fallback}</span>
-                <span className="source-pill source-pill--unmatched">未匹配 {sourceSummary.unmatched}</span>
-              </div>
+              <MatchResultGrid
+                library={selectedLibrary}
+                style={selectedStyle}
+                items={[]}
+                loading
+                onPreview={() => undefined}
+                onToast={showToast}
+              />
             </div>
           ) : null}
 
-          <MatchResultGrid
-            library={resultLibrary}
-            style={resultStyle}
-            items={items}
-            loading={loading}
-            onPreview={(iconName) => setPreviewIcon(iconName)}
-            onToast={showToast}
-          />
-          {hasMatchResult ? <p className="match-feedback mt-6">{requestFeedbackText}</p> : null}
+          {hasHistory ? (
+            <div className="match-session-list">
+              {sessions.map((session) => (
+                <MatchHistorySection
+                  key={session.id}
+                  session={session}
+                  exporting={exportingSessionId === session.id}
+                  onExport={(currentSession) => void handleExportBundle(currentSession)}
+                  onPreview={(currentSession, iconName) =>
+                    setPreviewTarget({
+                      library: currentSession.library,
+                      style: currentSession.style,
+                      iconName,
+                    })
+                  }
+                  onToast={showToast}
+                />
+              ))}
+            </div>
+          ) : (
+            <MatchResultGrid
+              library={selectedLibrary}
+              style={selectedStyle}
+              items={[]}
+              loading={false}
+              onPreview={() => undefined}
+              onToast={showToast}
+            />
+          )}
         </section>
       </main>
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <IconDetailDialog
-        library={resultLibrary}
-        style={resultStyle}
-        iconName={previewIcon}
-        open={Boolean(previewIcon)}
-        onClose={() => setPreviewIcon(null)}
+        library={previewTarget?.library ?? DEFAULT_MATCH_LIBRARY}
+        style={previewTarget?.style ?? DEFAULT_MATCH_STYLE}
+        iconName={previewTarget?.iconName ?? null}
+        open={Boolean(previewTarget)}
+        onClose={() => setPreviewTarget(null)}
         onToast={showToast}
       />
 

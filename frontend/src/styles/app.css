@@ -210,47 +210,44 @@ textarea {
   background: #fafafa;
 }
 
-.source-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.source-pill--catalog {
-  color: #d8d8d8;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.source-pill--llm {
-  color: #c4f15f;
-  background: rgba(196, 241, 95, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(196, 241, 95, 0.18);
-}
-
-.source-pill--fallback {
-  color: #ffe7b0;
-  background: rgba(255, 193, 7, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(255, 193, 7, 0.18);
-}
-
-.source-pill--unmatched {
-  color: #ffb4b4;
-  background: rgba(255, 92, 92, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(255, 92, 92, 0.16);
-}
-
 /* 匹配结果说明条：刻意不加卡片底色，降低视觉重量。 */
+.match-info__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .match-info__text {
   margin: 0;
   color: #a0a0a0;
   font-size: 13px;
-  line-height: 1.65;
+  line-height: 1.35;
+}
+
+.match-stat {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 9999px;
+  color: #b4b4b4;
+  font-size: 11px;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.03);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.match-stat--llm {
+  color: #c4f15f;
+}
+
+.match-stat--fallback {
+  color: #ffe7b0;
+}
+
+.match-stat--unmatched {
+  color: #ffb4b4;
 }
 
 .match-feedback {
@@ -258,6 +255,69 @@ textarea {
   color: #6f6f6f;
   font-size: 12px;
   line-height: 1.6;
+}
+
+.match-session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.match-session {
+  padding-top: 4px;
+}
+
+.match-session + .match-session {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.match-session--loading {
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.match-session__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.match-session__query {
+  overflow: hidden;
+  color: #f3f3f3;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match-session__time {
+  color: #5a5a5a;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.match-session__meta {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  color: #8a8a8a;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.match-session__actions {
+  display: flex;
+  align-items: flex-start;
 }
 
 /* 轻量 hover tooltip：用于收起不重要的长文案说明，避免 UI 噪声。 */
@@ -383,6 +443,7 @@ textarea {
 
 .hero-caption-title {
   font-size: 30px;
+  font-weight: 500;
   line-height: 1.1;
   letter-spacing: 4px;
 }
@@ -537,6 +598,7 @@ textarea {
 .dialog-backdrop {
   position: fixed;
   inset: 0;
+  z-index: 5000;
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(8px);
 }
@@ -544,15 +606,28 @@ textarea {
 .dialog-panel {
   position: fixed;
   inset: 50% auto auto 50%;
+  z-index: 5001;
   transform: translate(-50%, -50%);
   width: min(720px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-radius: 20px;
+}
+
+.dialog-svg-code {
+  min-width: 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .toast {
   position: fixed;
+  z-index: 5100;
   left: 50%;
   bottom: 24px;
   transform: translateX(-50%);

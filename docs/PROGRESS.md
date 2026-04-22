@@ -1,8 +1,19 @@
 # 图标大厨（IconCraft）项目进度记录
 
-> **日期**：2026-04-21
-> **阶段**：正式开发推进 · SVG 匹配 MVP 增强与文档同步
+> **日期**：2026-04-22
+> **阶段**：正式开发推进 · 匹配历史与工作台体验
 > **文档版本**：PRD v3.2 · Workspace MVP+
+
+---
+
+## 最新更新（2026-04-22）
+
+- **匹配历史**：`frontend/src/stores/match-history-store.ts`，`Zustand + persist(localStorage)`，最多保留 **10** 组；每次匹配成功prepend，旧组下沉；按组 **ZIP 导出**、详情预览均带组内 `library/style`。
+- **历史区 UI**：`MatchHistorySection` 头部收为 **两行**（查询词 + 时间 + 次按钮「导出」；第二行合并库/风格、命中、耗时、链路文案 `词典+LLM` / `仅词典`、来源统计 `match-stat`、流程 `?`）；去掉冗余「匹配记录」标签与独立摘要块。
+- **结果卡片**：`MatchResultGrid` 来源徽标与汇总统一为 **`match-stat`**，词典命中显示「词典」。
+- **弹窗**：`IconDetailDialog` / `SettingsDialog` 标题行 `items-start`、关闭钮 `inline-flex` 居中对齐；**`.dialog-svg-code`** 预格式换行，**弹层 z-index**（`5000+`）高于输入区 `BorderBeam`；**Toast** 仍高于弹层。
+- **文档**：`docs/ICONIFY.md` 排障用「主域 + 具体 `.svg` 路径」两步探活，避免误用集合级 URL 产生假 404。
+- **杂项**：Banner 标题 `hero-caption-title` 字重 500（`app.css`）。
 
 ---
 
@@ -197,30 +208,18 @@
 
 ```text
 f:/VibeCoding/IconCreator/
-├── README.md                    ✅ 当前工程说明与运行方式
-├── package.json                 ✅ workspace 根脚本
-├── pnpm-workspace.yaml          ✅ 包管理配置
-├── docs/
-│   ├── PRD.md                   ✅ 产品需求文档
-│   ├── DESIGN.md                📖 视觉与设计参考
-│   └── PROGRESS.md              📋 项目进度记录
+├── README.md
+├── package.json
+├── pnpm-workspace.yaml
+├── docs/              PRD / DESIGN / PROGRESS / ICONIFY
 ├── prototype/
-│   ├── index.html               ✅ 原型参考
-│   └── assets/
-├── frontend/
-│   ├── src/
-│   │   ├── pages/workbench.tsx  ✅ 主工作台
-│   │   ├── components/          ✅ 设置弹窗 / 结果网格 / 图标详情
-│   │   ├── lib/api.ts           ✅ 前端 API 客户端
-│   │   └── stores/              ✅ 设置持久化
-│   └── .env.local               🟡 本地默认模型配置（不入库）
-├── backend/
-│   └── src/
-│       ├── routes/              ✅ 匹配接口与 SVG 代理
-│       └── services/            ✅ catalog / LLM / match 服务
+├── frontend/src/
+│   ├── pages/workbench.tsx
+│   ├── components/    设置、match-history-section、结果网格、图标详情
+│   ├── lib/api.ts
+│   └── stores/        settings-store、match-history-store
+├── backend/src/
 └── shared/
-    ├── src/                     ✅ 共享类型与常量
-    └── config/                  ✅ prompt presets 与多库 catalog
 ```
 
 ---
@@ -241,7 +240,7 @@ f:/VibeCoding/IconCreator/
 
 - [ ] AI 3D 生成功能从原型迁移到正式工程，并与当前工作台双模式切换打通
 - [ ] 浏览模式 `/browse` 的正式页面与单图导出能力
-- [ ] 历史记录与最近匹配组持久化
+- [x] 历史记录与最近匹配组持久化（`match-history-store`，最多 10 组）
 - [ ] 更完整的输入校验反馈与错误恢复交互
 - [ ] 为关键词扩展链路增加可观测性与命中质量回看
 - [ ] 移动端与窄屏适配
@@ -325,5 +324,5 @@ f:/VibeCoding/IconCreator/
 
 ---
 
-**最后更新**：2026-04-21
+**最后更新**：2026-04-22
 **维护者**：产品 + 开发

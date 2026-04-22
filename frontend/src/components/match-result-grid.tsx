@@ -26,18 +26,19 @@ function SkeletonCard() {
 
 function getSourceMeta(item: MatchItem) {
   if (item.status !== "matched") {
-    return { label: "未匹配", className: "source-pill source-pill--unmatched" };
+    return { label: "未匹配", className: "match-stat match-stat--unmatched" };
   }
 
   switch (item.source) {
     case "catalog":
-      return { label: "本地词典", className: "source-pill source-pill--catalog" };
+      // 与 MatchHistorySection 汇总行里的「词典 N」同系视觉（单卡无数量，只写「词典」）
+      return { label: "词典", className: "match-stat" };
     case "llm":
-      return { label: "LLM 语义", className: "source-pill source-pill--llm" };
+      return { label: "LLM", className: "match-stat match-stat--llm" };
     case "fallback":
-      return { label: "本地兜底", className: "source-pill source-pill--fallback" };
+      return { label: "兜底", className: "match-stat match-stat--fallback" };
     default:
-      return { label: "已匹配", className: "source-pill" };
+      return null;
   }
 }
 
@@ -64,7 +65,7 @@ export function MatchResultGrid({
 
   if (items.length === 0) {
     return (
-      <div className="surface rounded-2xl p-6 text-center text-sm text-[#8a8a8a]">
+      <div className="rounded-2xl border border-white/8 bg-transparent p-6 text-center text-sm text-[#8a8a8a]">
         输入一组词后开始 SVG 匹配，当前无内容
       </div>
     );
@@ -136,9 +137,11 @@ export function MatchResultGrid({
             </div>
 
             <div>
-              <div className="mb-2 flex justify-center">
-                <span className={sourceMeta.className}>{sourceMeta.label}</span>
-              </div>
+              {sourceMeta ? (
+                <div className="mb-2 flex justify-center">
+                  <span className={sourceMeta.className}>{sourceMeta.label}</span>
+                </div>
+              ) : null}
               <div className="match-card-label">{item.word}</div>
               <div className="match-card-name">
                 {matched ? `${collection}:${item.iconName}` : "未匹配"}

@@ -46,8 +46,12 @@
 ### 2. 匹配结果里「SVG 获取失败」或接口 502
 
 - **502** 且文案含 upstream：多为后端请求 `api.iconify.design` **失败**（对端不可用、DNS、防火墙、TLS 拦截）。
-  - 在 **运行后端的机器** 上测试：`curl -I "https://api.iconify.design/lucide.svg"`（collection 以 `shared` 中 `styleConfig` 为准）。
-- **404**：可能是 **本地 catalog 无该 name**（`icons.ts` 在校验 `aliases.json / names.json` 后直接 404），与 Iconify 无关；应查匹配逻辑与 catalog 数据。
+  - 在 **运行后端的机器** 上对公共 API 做两步探活（先可达、再具体路径；`collection` / 图标名以 `shared` 中 `styleConfig` 与 catalog 为准）：
+    1. **可达性**：`curl -I "https://api.iconify.design/"` — 期望 `2xx`，说明主域与 TLS 大致正常。
+    2. **功能性**：`curl -I "https://api.iconify.design/lucide/home.svg"` — 期望 `200`，说明「集合 + 图标名」形态的 SVG 路径可用（可将 `lucide/home` 换成你当前接入的任意合法 `collection/name`）。
+  - **勿用**仅含集合的路径（如 `.../lucide.svg`）当探活：缺少具体图标名时，上游常返回 **404**，容易误判为「服务挂了」。
+  - Windows 若无 `curl`，可用 PowerShell：`Invoke-WebRequest -Method Head -Uri 'https://api.iconify.design/'` 与 `Invoke-WebRequest -Method Head -Uri 'https://api.iconify.design/lucide/home.svg'`，看状态码即可。
+- **404**（本项目 `/api/icons/...`）：多为 **本地 catalog 无该 name**（`icons.ts` 在校验 `aliases.json / names.json` 后直接 404），与 Iconify 上游无关；应查匹配逻辑与 catalog 数据。**404**（你手工探活 Iconify 时）：也可能是 **URL 写错**（路径不完整或图标不存在），需与上一条区分。
 
 ### 3. 仅内网/离线环境
 
@@ -77,4 +81,4 @@
 
 ---
 
-*文档随实现变更时请同步更新 `backend/src/routes/icons.ts` 与 `frontend` 中 `@iconify/react` 的用法说明。*
+*实现变更时请同步核对：`backend/src/routes/icons.ts`、前端 `@iconify/react` 与本文排障示例。*

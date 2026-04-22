@@ -58,24 +58,29 @@ export function IconDetailDialog({
     <>
       <button className="dialog-backdrop" onClick={onClose} aria-label="关闭图标详情弹窗" />
       <div className="dialog-panel surface-elevated p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0 pr-1">
             <div className="text-lg font-semibold">{iconName}</div>
             <div className="mt-1 text-sm text-[#8a8a8a]">{collection}: 真实 SVG 资源预览</div>
           </div>
-          <button className="btn-subtle h-8 w-8 rounded-md" onClick={onClose}>
-            <Icon icon="lucide:x" width="16" />
+          <button
+            type="button"
+            className="btn-subtle inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+            onClick={onClose}
+            aria-label="关闭"
+          >
+            <Icon icon="lucide:x" width="16" height="16" />
           </button>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-[240px_1fr]">
-          <div className="surface rounded-2xl p-5">
+        <div className="grid min-w-0 gap-5 md:grid-cols-[240px_1fr]">
+          <div className="surface min-w-0 rounded-2xl p-5">
             <div className="flex aspect-square items-center justify-center rounded-xl bg-[#0e0e0e] text-white">
               <Icon icon={`${collection}:${iconName}`} width="120" />
             </div>
           </div>
 
-          <div className="flex min-h-[280px] flex-col">
+          <div className="flex min-h-[280px] min-w-0 flex-col">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs uppercase tracking-[0.22em] text-[#5a5a5a]">SVG 代码</span>
               <div className="flex gap-2">
@@ -100,7 +105,7 @@ export function IconDetailDialog({
               </div>
             </div>
 
-            <pre className="surface flex-1 overflow-auto rounded-2xl p-4 text-xs leading-6 text-[#a0a0a0]">
+            <pre className="dialog-svg-code surface min-h-0 flex-1 rounded-2xl p-4 text-xs leading-6 text-[#a0a0a0]">
               {loading ? "正在加载 SVG..." : svgText || "暂无 SVG 内容"}
             </pre>
           </div>

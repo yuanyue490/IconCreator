@@ -23,15 +23,20 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     <>
       <button className="dialog-backdrop" onClick={onClose} aria-label="关闭设置弹窗" />
       <div className="dialog-panel surface-elevated p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0 pr-1">
             <div className="text-lg font-semibold">模型配置</div>
             <div className="mt-1 text-sm text-[#8a8a8a]">
               MVP 先使用本地存储。这里的配置会随浏览器缓存保存，不进入服务器。
             </div>
           </div>
-          <button className="btn-subtle h-8 w-8 rounded-md" onClick={onClose}>
-            <Icon icon="lucide:x" width="16" />
+          <button
+            type="button"
+            className="btn-subtle inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+            onClick={onClose}
+            aria-label="关闭"
+          >
+            <Icon icon="lucide:x" width="16" height="16" />
           </button>
         </div>
 

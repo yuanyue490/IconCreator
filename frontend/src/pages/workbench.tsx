@@ -237,7 +237,7 @@ export function WorkbenchPage() {
             厨
           </div>
           <div className="text-sm font-semibold">图标大厨</div>
-          <div className="text-[11px] text-[#5a5a5a]">v0.1 MVP</div>
+          <div className="text-[11px] text-[#5a5a5a]">v0.2 Beta</div>
         </div>
 
         <div className="flex items-center gap-1">
@@ -280,7 +280,7 @@ export function WorkbenchPage() {
                 className={mode === "match" ? "is-active" : ""}
                 onClick={() => setMode("match")}
               >
-                <Icon icon="lucide:layers" width="15" />
+                <Icon icon="lucide:globe" width="15" />
                 SVG匹配
               </button>
             </div>
@@ -343,7 +343,7 @@ export function WorkbenchPage() {
               onClick={() => void handleMatch()}
               disabled={loading}
             >
-              <Icon icon={loading ? "lucide:loader-circle" : "lucide:layers"} width="15" />
+              <Icon icon={loading ? "lucide:loader-circle" : "lucide:rocket"} width="15" />
               {loading ? "匹配中..." : "开始匹配"}
             </button>
           </div>

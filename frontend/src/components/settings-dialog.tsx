@@ -27,7 +27,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <div className="min-w-0 pr-1">
             <div className="text-lg font-semibold">设置</div>
             <div className="mt-1 text-sm text-[#8a8a8a]">
-              LLM 相关项保存在本机；站长密钥可仅配置在后端环境变量。详见 README。
+              此处可修改接入自己的模型，也可以调整默认的SVG模型匹配提示词
             </div>
           </div>
           <button

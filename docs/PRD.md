@@ -43,12 +43,21 @@
 
 #### 2.2 本地 JSON 与三开放参数
 
-**风格模板**：`shared/config/ai-3d-icon-style.json`（原型同步副本见 `prototype/assets/`）。
+**风格模板（多套，正式工程）**：`shared/config/ai-3d-icon-styles.json`（`styles[]`；原型可仅保留单文件副本作参考）。
 
-- **`type`**：模板标识（如 `3d_icon`），供 UI / 服务端路由。
-- **`vars`**：`{生成物体}`、`{主色调}`、`{材质}` 等与正文占位符一致的 token，服务端或前端替换后再送模型。
-- **`prompt`**：主提示词（Positive）。
-- **`negative`**：负面提示词；与 vars 中出现的同一 token（若有）也需替换逻辑支持。
+- **`version`**：配置表版本号，供迁移与校验。
+- **`styles[]`**：每一项为一套可切换的提示词模板，至少包含：
+  - **`id`**：稳定键（持久化、埋点、历史记录引用）。
+  - **`label`**：工作台 Chip 与历史摘要展示用短名。
+  - **`description?`**：可选副文案，用于 Tooltip 或说明行。
+  - **`type`**：模板类型标识，供 UI / 服务端路由扩展。
+  - **`vars`**：`{生成物体}`、`{主色调}`、`{材质}` 等与正文占位符一致的 token，前端按当前选中套替换后再送模型。
+  - **`prompt`**：主提示词（Positive）。
+  - **`negative`**：负面提示词；与 `vars` 中出现的同一 token 一并参与替换。
+
+工作台需支持 **整体切换当前套**（与主色/材质预置独立）：选中套决定整段 Positive/Negative；用户选择持久化于本地；单次生成历史宜记录当时所用 **`styleId` / `styleLabel`**（旧数据可无）。
+
+**单机风格文件（遗留/镜像）**：`shared/config/ai-3d-icon-style.json`（`prototype/assets/` 可有同步副本）仍可表示**单套**模板，字段与上表一致；扩充新画风时优先在 **`ai-3d-icon-styles.json`** 中追加 `styles[]` 项，不必再维护多份独立 JSON。
 
 **主色调（预置色板 + 自定义）**：
 
@@ -64,13 +73,13 @@
 **预置 phrase 与文生图模型（可理解性）**：
 
 - `colors[].phrase` / `materials[].phrase` 为**可画面化的自然语言**：描述色相倾向、渐变/明暗关系、哑光或反光等观感，并可带 **B 端 / 大屏 / HUD** 等行业语境词，便于模型对齐「指挥蓝」「链路青绿」等抽象标签背后的视觉预期。
-- 运行时由 `ai-3d-icon-style.json` 的占位符 **`{主色调}`、`{材质}`** 代入整段 **`prompt`**，与 **`negative`** 一并提交；通常为**中文为主体的单条 Positive**，方舟 Seedream 等多模态文生图模型一般具备中文语义理解，可与模板中现有中文句式混用而无须整条改为英文。
+- 运行时由**当前选中风格套**内 `vars` 与正文一致的占位符（如 **`{主色调}`、`{材质}`、`{生成物体}`**）代入该套的 **`prompt`**，与 **`negative`** 一并提交；通常为**中文为主体的单条 Positive**，方舟 Seedream 等多模态文生图模型一般具备中文语义理解，可与模板中现有中文句式混用而无须整条改为英文。
 - **`swatch` 仅占位 UI**：供色板圆点预览，**默认不写入**模型请求正文；若产品未来要在请求中附带 HEX，需在服务端另行拼接并在此文档增补字段约定。
 - 若实测某档位语言效果不稳、或接入层强制英文入参，可在网关增加 **phrase → 英文扩展句**（或与中文并列输出），不改变 JSON 结构中「以 phrase 为唯一真源」的维护方式。
 
 **提示词预览**：工作台侧应实时渲染替换后的 Positive / Negative，与实际上屏（或上传）的请求体一致。
 
-早期「极简 / 玻璃 / 粘土 / 赛博 / 金属」五段英文 chip 方案已废弃；由 **`ai-3d-icon-style.json` + `ai-3d-icon-presets.json`** 统一管理画风与可调参数字段。
+早期「极简 / 玻璃 / 粘土 / 赛博 / 金属」五段英文 chip 方案已废弃；由 **`ai-3d-icon-styles.json`（多套 Positive/Negative）+ `ai-3d-icon-presets.json`**（主色 / 材质话术）统一管理可调参数字段；单机 `ai-3d-icon-style.json` 仅作单套参考时可保留。
 
 #### 2.3 生成参数
 
@@ -436,7 +445,7 @@ img.onload = () => {
   - 当前开发版（匹配模式）：`Ctrl/Cmd + Enter` 提交，`Enter` 换行
   - **AI 生成**：`生成物体` 输入；主色「预置色板 + 自定义词」；材质「预置卡片 + 自定义词」；分辨率 / 比例两列下拉。
 - **参数区**：
-  - AI 模式：画风由 **`ai-3d-icon-style.json`** 模板决定；调色 / 材质由 **`ai-3d-icon-presets.json`** 与自定义框决定（见§2.2）；高级区可折叠（视角等示例扩展）。
+  - AI 模式：Positive/Negative 套系由 **`ai-3d-icon-styles.json`**（多套可切换 + 本地持久化）决定；调色 / 材质由 **`ai-3d-icon-presets.json`** 与自定义框决定（见§2.2）；高级区可折叠（视角等示例扩展）。
   - 匹配模式：`{图标库, 风格}` 二级下拉 + 当前组合 chip；"AI 帮我选"仍为后续规划
 - **生成按钮**：统一白底黑字，高优先级 CTA
 
@@ -511,7 +520,7 @@ img.onload = () => {
 
 **AI 3D 生成器**：
 
-- **本地可调配置**：`ai-3d-icon-style.json`（prompt / negative / vars）与 `ai-3d-icon-presets.json`（色板、`phrase`、材质 **`thumb`**；占位图后续换真实材质示意图）
+- **本地可调配置**：`ai-3d-icon-styles.json`（多套 prompt / negative / vars，工作台 Chip 切换）与 `ai-3d-icon-presets.json`（色板、`phrase`、材质 **`thumb`**；占位图后续换真实材质示意图）；单机 `ai-3d-icon-style.json` 可作单套镜像参考
 - 主色调：**预置 swatch + 自定义词**，自定义非空优先
 - 材质：**预置卡片（图+词） + 自定义词**，自定义非空优先
 - 2 张候选图；PNG 下载与方舟侧分辨率 / 比例由实际上线接入为准（原型已双下拉示意）

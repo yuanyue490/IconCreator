@@ -41,7 +41,8 @@ IconCreator/
 ├── shared/              # 前后端共享类型、常量与配置
 │   ├── config/
 │   │   ├── prompt-presets.json
-│   │   ├── ai-3d-icon-style.json   # AI 3D：prompt / negative / vars
+│   │   ├── ai-3d-icon-style.json    # 单机风格模板（可读作首套参考；正式前端用 styles 表）
+│   │   ├── ai-3d-icon-styles.json   # AI 3D：多套提示词风格（id/label/description + prompt/negative/vars）
 │   │   ├── ai-3d-icon-presets.json # 主色板 + 材质预置：phrase 注入 prompt（中文可理解）；swatch/UI；thumb 可换材质图
 │   │   └── icon-catalog/<library>/<style>/
 │   │       ├── aliases.json   # 精选中英别名词典（LLM prompt 候选源）
@@ -55,7 +56,7 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈；**工作台「SVG 样式」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。
+- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**（**多套「提示词风格」Chip 切换**，持久化于 `localStorage`；生成历史条目标记所用风格名）、顶栏 **v0.5 Beta** 展示、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈；**工作台「SVG 样式」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。全局 **`scrollbar-gutter: stable`**（及旧浏览器回退）减轻双模式切换时滚动条显隐带来的布局左右抖动。
 - `backend`：`/api/match` 匹配接口、`/api/ai/generate` AI 生图代理、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
 - `shared`：匹配与 AI 生成类型、图标库与风格配置、AI 3D prompt / preset 配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。
@@ -112,6 +113,8 @@ corepack pnpm catalog:names
 - 前端 Vite 开发服务器运行在 `5173`
 - 后端 Fastify 开发服务器运行在 `8787`
 - 前端通过 Vite proxy 转发 `/api`
+
+**线上若返回 `Route POST:/api/ai/generate not found`（Fastify 404）**：说明浏览器请求已到达 **Node 上的 Fastify**，但当前进程里没有注册该路由。请确认：(1) 已用**含** `backend/src/routes/ai.ts` 的代码构建并发布；(2) 启动入口为 **`node backend/dist/index.js`**（或平台将 `start` 设为 `pnpm --filter @iconcraft/backend start`），而不是只起了旧脚本或仅部署了静态前端；(3) CI/镜像中先执行 `pnpm --filter @iconcraft/shared build && pnpm --filter @iconcraft/backend build`。自检：GET `https://你的API域/api/health` 应返回含 `features.aiGenerate: true` 的 JSON。
 
 ## LLM 密钥与部署（开发 / 生产切分）
 

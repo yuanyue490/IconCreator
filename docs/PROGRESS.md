@@ -1,14 +1,18 @@
 # 图标大厨（IconCraft）项目进度记录
 
-> **日期**：2026-04-22
-> **阶段**：正式开发推进 · 匹配历史与工作台体验
+> **日期**：2026-04-30
+> **阶段**：正式开发推进 · AI 生成 · 匹配历史与工作台体验
 > **文档版本**：PRD v3.2 · Workspace MVP+
 
 ---
 
 ## 最新更新（2026-04-30）
 
-- **正式工程 · AI 生成模块**：工作台 `AI 生成` 模式已从禁用切换为可用 UI；新增 `AiGenerateSection`，支持物体输入、B 端/大屏预置主色、材质选择、自定义覆盖、分辨率 / 比例、2 张候选结果、单张下载与复制图片。
+- **产品与展示版本**：工作台顶栏展示 **v0.5 Beta**（`workbench.tsx`）；npm `package.json` 仍为 workspace 语义版本 `0.1.0`，与 UI 文案解耦。
+- **AI 生成 · 多套提示词风格**：新增 `shared/config/ai-3d-icon-styles.json`（`version` + `styles[]`，每套含 `id` / `label` / `description?` / 与单机版一致的 `type`/`vars`/`prompt`/`negative`）。共享类型 `Ai3dIconStyleVariant`、`Ai3dIconStylesCatalog`；`shared` 包导出 `./config/ai-3d-icon-styles.json`。单机 `ai-3d-icon-style.json` 仍可作首套镜像或遗留参考，正式前端以样式表为准。
+- **前端**：`stores/ai-prompt-style-store.ts`（`iconcraft-ai-prompt-style`，持久化当前 `selectedStyleId`）；`AiGenerateSection` 内 Chip 切换「提示词风格」，侧栏摘要区分「预设色/材质」与「提示词模板」；预览 / 复制 / 请求共用当前 variant 占位符替换。`ai-generation-history-store` 单条会话记录 `styleId` / `styleLabel`（旧数据无）；`AiHistorySection` 元信息区展示所用风格名称。
+- **布局**：全局 `html { scrollbar-gutter: stable }` + 不支持时的 `overflow-y: scroll` 回退（`app.css`），减轻 **AI 生成 ↔ SVG 匹配** 切换时因纵向滚动条出现/消失导致的视口宽度变化与「左右抖动」。
+- **文档（对齐本日实现）**：`docs/PROGRESS.md`、`README.md` 仓库说明、`docs/PRD.md` §2.2 / §4.3 / Phase 1 已写明样式表、工作台版本展示与滚动条槽位策略。工作台 `AI 生成` 模式已从禁用切换为可用 UI；新增 `AiGenerateSection`，支持物体输入、B 端/大屏预置主色、材质选择、自定义覆盖、分辨率 / 比例、2 张候选结果、单张下载与复制图片。
 - **后端 · AI 生图代理**：新增 `/api/ai/generate` 与 `ai-image-service`，按 OpenAI 兼容 `/images/generations` 形态接入火山方舟 **Seedream 4.5**；请求同时传 `n` 与 `sequential_image_generation_options.max_images`，若接入点仍只回单张则自动补请求到 2 张；API Key 仅从后端环境变量读取，缺失时返回明确提示，不暴露给浏览器。
 - **原型 · AI 3D 生成策略**：单次由 **4 张候选** 调整为 **2 张**，与控费及产品默认一致。
 - **`ai-3d-icon-presets.json`**：主色与材质话术面向 **大屏可视化 + B 端**（指挥蓝、链路青绿、霓虹 HUD 点缀、状态绿/告警琥珀等；拉丝钢、喷砂钛灰、碳纤维、钢琴黑、深色亚克力面板等），替换偏消费/C 端审美的条目。**说明**：预置文案为写入 `prompt` 的中文 **`phrase`**，与风格模板占位符拼装后一并送模型；`swatch` 仅界面示意。详见 `docs/PRD.md` §2.2「预置 phrase 与文生图模型」。
@@ -233,9 +237,9 @@ f:/VibeCoding/IconCreator/
 ├── prototype/
 ├── frontend/src/
 │   ├── pages/workbench.tsx
-│   ├── components/    设置、match-history-section、结果网格、图标详情
+│   ├── components/    设置、AI 生成区、match-history、ai-history、结果网格、图标详情
 │   ├── lib/api.ts
-│   └── stores/        settings-store、match-history-store
+│   └── stores/        settings、match-history、ai-generation-history、ai-prompt-style
 ├── backend/src/
 └── shared/
 ```
@@ -256,6 +260,7 @@ f:/VibeCoding/IconCreator/
 
 ### 4.2 功能增强待办
 
+- [x] AI 生成支持多套 Positive/Negative 模板切换（样式表 JSON + persist + 历史记录风格字段）
 - [x] AI 3D 生成功能从原型迁移到正式工程，并与当前工作台双模式切换打通
 - [ ] 浏览模式 `/browse` 的正式页面与单图导出能力
 - [x] 历史记录与最近匹配组持久化（`match-history-store`，最多 10 组）
@@ -342,5 +347,5 @@ f:/VibeCoding/IconCreator/
 
 ---
 
-**最后更新**：2026-04-22
+**最后更新**：2026-04-30
 **维护者**：产品 + 开发

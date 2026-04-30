@@ -21,7 +21,15 @@ await app.register(cors, {
   origin: true,
 });
 
-app.get("/api/health", async () => ({ ok: true }));
+app.get("/api/health", async () => ({
+  ok: true as const,
+  /** 运维自检：若为旧二进制，可能没有 features 或为旧字段；需含 aiGenerate */
+  features: {
+    match: true,
+    iconsSvg: true,
+    aiGenerate: true,
+  },
+}));
 
 await app.register(aiRoute);
 await app.register(matchRoute);

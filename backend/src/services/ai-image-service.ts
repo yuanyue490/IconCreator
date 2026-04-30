@@ -9,7 +9,7 @@ type UpstreamImageItem = {
 };
 
 const DEFAULT_IMAGE_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
-const DEFAULT_IMAGE_MODEL = "doubao-seedream-4-5";
+const DEFAULT_IMAGE_MODEL = "doubao-seedream-4-5-251128";
 
 const SIZE_TABLE: Record<AiGenerateRequest["resolution"], Record<AiGenerateRequest["aspectRatio"], string>> = {
   "1K": {

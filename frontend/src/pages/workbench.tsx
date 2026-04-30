@@ -11,6 +11,7 @@ import {
   type IconStyleId,
 } from "@iconcraft/shared";
 
+import { AiGenerateSection } from "../components/ai-generate-section";
 import { MatchHistorySection } from "../components/match-history-section";
 import { IconDetailDialog } from "../components/icon-detail-dialog";
 import { MatchResultGrid } from "../components/match-result-grid";
@@ -37,7 +38,7 @@ type ToastState = {
 };
 
 export function WorkbenchPage() {
-  const [mode, setMode] = useState<"ai" | "match">("match");
+  const [mode, setMode] = useState<"ai" | "match">("ai");
   const [matchInput, setMatchInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState<IconLibraryId>(DEFAULT_MATCH_LIBRARY);
@@ -67,6 +68,10 @@ export function WorkbenchPage() {
   const hasLlmConfig = Boolean(settings.baseURL.trim() && settings.model.trim());
   const hasHistory = sessions.length > 0;
   const safeExportSize = isPresetSize(settings.exportIconSizePx) ? settings.exportIconSizePx : 24;
+  const featureDescription =
+    mode === "ai"
+      ? "输入一个业务对象，选择适合大屏和 B 端项目的主色与材质，生成 2 张原创 3D 图标候选。"
+      : "输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。";
 
   useEffect(() => {
     return () => {
@@ -237,7 +242,7 @@ export function WorkbenchPage() {
             厨
           </div>
           <div className="text-sm font-semibold">图标大厨</div>
-          <div className="text-[11px] text-[#5a5a5a]">v0.2 Beta</div>
+          <div className="text-[11px] text-[#5a5a5a]">v0.5 Beta</div>
         </div>
 
         <div className="flex items-center gap-1">
@@ -263,19 +268,13 @@ export function WorkbenchPage() {
 
           <div className="mt-6 flex justify-center">
             <div className="mode-seg">
-              <span
-                className="mode-seg-soon"
-                tabIndex={0}
-                aria-label="AI 生成功能即将上线"
+              <button
+                className={mode === "ai" ? "is-active" : ""}
+                onClick={() => setMode("ai")}
               >
-                <span className="mode-seg-soon__bubble" role="tooltip">
-                  即将上线
-                </span>
-                <button className="is-disabled" type="button" disabled>
-                  <Icon icon="lucide:sparkles" width="15" />
-                  AI 生成
-                </button>
-              </span>
+                <Icon icon="lucide:sparkles" width="15" />
+                AI 生成
+              </button>
               <button
                 className={mode === "match" ? "is-active" : ""}
                 onClick={() => setMode("match")}
@@ -287,172 +286,178 @@ export function WorkbenchPage() {
           </div>
 
           <p className="mt-3 text-sm leading-6 text-[#a0a0a0]">
-            输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。
+            {featureDescription}
           </p>
         </section>
 
-        <BorderBeam size="md" colorVariant="ocean" duration={4} strength={0.3}>
-        <section className="surface-raised rounded-[20px] p-5">
-          <div className="input-shell px-4 py-3">
-            <textarea
-              ref={inputRef}
-              className="input-area text-[15px] leading-[1.5]"
-              rows={2}
-              value={matchInput}
-              onChange={(event) => autoResize(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-                  event.preventDefault();
-                  void handleMatch();
-                }
-              }}
-              placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：首页 管理 安防 监控"
-            />
-          </div>
+        {mode === "ai" ? (
+          <AiGenerateSection onToast={showToast} />
+        ) : (
+          <>
+            <BorderBeam size="md" colorVariant="ocean" duration={4} strength={0.3}>
+              <section className="surface-raised rounded-[20px] p-5">
+                <div className="input-shell px-4 py-3">
+                  <textarea
+                    ref={inputRef}
+                    className="input-area text-[15px] leading-[1.5]"
+                    rows={2}
+                    value={matchInput}
+                    onChange={(event) => autoResize(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        void handleMatch();
+                      }
+                    }}
+                    placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：首页 管理 安防 监控"
+                  />
+                </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11.5px] uppercase tracking-[0.2em] text-[#5a5a5a]">图标库</span>
-              <select
-                className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
-                value={selectedLibrary}
-                onChange={(event) => handleLibraryChange(event.target.value as IconLibraryId)}
-              >
-                {ICON_LIBRARIES.map((library) => (
-                  <option key={library.id} value={library.id}>
-                    {library.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
-                value={selectedStyle}
-                onChange={(event) => setSelectedStyle(event.target.value as IconStyleId)}
-              >
-                {(selectedLibraryConfig?.styles ?? []).map((style) => (
-                  <option key={style.id} value={style.id}>
-                    {style.label}
-                  </option>
-                ))}
-              </select>
-              <span className="text-xs text-[#5a5a5a]">当前词数 {wordCount}/20</span>
-            </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[11.5px] uppercase tracking-[0.2em] text-[#5a5a5a]">图标库</span>
+                    <select
+                      className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
+                      value={selectedLibrary}
+                      onChange={(event) => handleLibraryChange(event.target.value as IconLibraryId)}
+                    >
+                      {ICON_LIBRARIES.map((library) => (
+                        <option key={library.id} value={library.id}>
+                          {library.label}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
+                      value={selectedStyle}
+                      onChange={(event) => setSelectedStyle(event.target.value as IconStyleId)}
+                    >
+                      {(selectedLibraryConfig?.styles ?? []).map((style) => (
+                        <option key={style.id} value={style.id}>
+                          {style.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-xs text-[#5a5a5a]">当前词数 {wordCount}/20</span>
+                  </div>
 
-            <button
-              className="btn-primary inline-flex h-9 items-center gap-2 rounded-lg px-5 text-[13.5px]"
-              onClick={() => void handleMatch()}
-              disabled={loading}
+                  <button
+                    className="btn-primary inline-flex h-9 items-center gap-2 rounded-lg px-5 text-[13.5px]"
+                    onClick={() => void handleMatch()}
+                    disabled={loading}
+                  >
+                    <Icon icon={loading ? "lucide:loader-circle" : "lucide:rocket"} width="15" />
+                    {loading ? "匹配中..." : "开始匹配"}
+                  </button>
+                </div>
+              </section>
+            </BorderBeam>
+
+            <div
+              className="workbench-export-tuning"
+              role="group"
+              aria-label="SVG 导出与预览外观"
             >
-              <Icon icon={loading ? "lucide:loader-circle" : "lucide:rocket"} width="15" />
-              {loading ? "匹配中..." : "开始匹配"}
-            </button>
-          </div>
-        </section>
-        </BorderBeam>
-
-        <div
-          className="workbench-export-tuning"
-          role="group"
-          aria-label="SVG 导出与预览外观"
-        >
-          <span className="workbench-export-tuning__title">全局样式修改</span>
-          <span className="workbench-export-tuning__k">大小</span>
-          <select
-            className="workbench-export-tuning__select"
-            value={safeExportSize}
-            onChange={(event) =>
-              settings.setField("exportIconSizePx", Number.parseInt(event.target.value, 10) || 24)
-            }
-            aria-label="导出与预览的图标边长（像素）"
-          >
-            {EXPORT_SIZE_PRESETS.map((px) => (
-              <option key={px} value={px}>
-                {px}px
-              </option>
-            ))}
-          </select>
-          <span className="workbench-export-tuning__k">颜色</span>
-          <input
-            type="color"
-            className="workbench-export-tuning__color"
-            value={
-              /^#[0-9a-fA-F]{6}$/.test(settings.exportIconColor)
-                ? settings.exportIconColor
-                : "#fafafa"
-            }
-            onChange={(event) => settings.setField("exportIconColor", event.target.value)}
-            aria-label="图标单色"
-          />
-          <input
-            type="text"
-            className="workbench-export-tuning__hex"
-            value={settings.exportIconColor}
-            onChange={(event) => settings.setField("exportIconColor", event.target.value)}
-            placeholder="#fafafa"
-            spellCheck={false}
-            aria-label="颜色十六进制"
-          />
-        </div>
-
-        <section className="mt-6">
-          {loading ? (
-            <div className="match-session match-session--loading">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-[#5a5a5a]">
-                    正在匹配
-                  </div>
-                  <div className="match-session__query" title={matchInFlightLabel ?? ""}>
-                    {matchInFlightLabel ?? "…"}
-                  </div>
-                </div>
-                <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
-                  <Icon icon="lucide:loader-circle" width="15" />
-                  正在生成新结果组
-                </div>
-              </div>
-              <MatchResultGrid
-                library={selectedLibrary}
-                style={selectedStyle}
-                items={[]}
-                loading
-                onPreview={() => undefined}
-                onToast={showToast}
+              <span className="workbench-export-tuning__title">全局样式修改</span>
+              <span className="workbench-export-tuning__k">大小</span>
+              <select
+                className="workbench-export-tuning__select"
+                value={safeExportSize}
+                onChange={(event) =>
+                  settings.setField("exportIconSizePx", Number.parseInt(event.target.value, 10) || 24)
+                }
+                aria-label="导出与预览的图标边长（像素）"
+              >
+                {EXPORT_SIZE_PRESETS.map((px) => (
+                  <option key={px} value={px}>
+                    {px}px
+                  </option>
+                ))}
+              </select>
+              <span className="workbench-export-tuning__k">颜色</span>
+              <input
+                type="color"
+                className="workbench-export-tuning__color"
+                value={
+                  /^#[0-9a-fA-F]{6}$/.test(settings.exportIconColor)
+                    ? settings.exportIconColor
+                    : "#fafafa"
+                }
+                onChange={(event) => settings.setField("exportIconColor", event.target.value)}
+                aria-label="图标单色"
+              />
+              <input
+                type="text"
+                className="workbench-export-tuning__hex"
+                value={settings.exportIconColor}
+                onChange={(event) => settings.setField("exportIconColor", event.target.value)}
+                placeholder="#fafafa"
+                spellCheck={false}
+                aria-label="颜色十六进制"
               />
             </div>
-          ) : null}
 
-          {hasHistory ? (
-            <div className="match-session-list">
-              {sessions.map((session) => (
-                <MatchHistorySection
-                  key={session.id}
-                  session={session}
-                  exporting={exportingSessionId === session.id}
-                  onExport={(currentSession) => void handleExportBundle(currentSession)}
-                  onDelete={handleRemoveSession}
-                  onPreview={(currentSession, iconName) =>
-                    setPreviewTarget({
-                      library: currentSession.library,
-                      style: currentSession.style,
-                      iconName,
-                    })
-                  }
+            <section className="mt-6">
+              {loading ? (
+                <div className="match-session match-session--loading">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-[#5a5a5a]">
+                        正在匹配
+                      </div>
+                      <div className="match-session__query" title={matchInFlightLabel ?? ""}>
+                        {matchInFlightLabel ?? "…"}
+                      </div>
+                    </div>
+                    <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
+                      <Icon icon="lucide:loader-circle" width="15" />
+                      正在生成新结果组
+                    </div>
+                  </div>
+                  <MatchResultGrid
+                    library={selectedLibrary}
+                    style={selectedStyle}
+                    items={[]}
+                    loading
+                    onPreview={() => undefined}
+                    onToast={showToast}
+                  />
+                </div>
+              ) : null}
+
+              {hasHistory ? (
+                <div className="match-session-list">
+                  {sessions.map((session) => (
+                    <MatchHistorySection
+                      key={session.id}
+                      session={session}
+                      exporting={exportingSessionId === session.id}
+                      onExport={(currentSession) => void handleExportBundle(currentSession)}
+                      onDelete={handleRemoveSession}
+                      onPreview={(currentSession, iconName) =>
+                        setPreviewTarget({
+                          library: currentSession.library,
+                          style: currentSession.style,
+                          iconName,
+                        })
+                      }
+                      onToast={showToast}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <MatchResultGrid
+                  library={selectedLibrary}
+                  style={selectedStyle}
+                  items={[]}
+                  loading={false}
+                  onPreview={() => undefined}
                   onToast={showToast}
                 />
-              ))}
-            </div>
-          ) : (
-            <MatchResultGrid
-              library={selectedLibrary}
-              style={selectedStyle}
-              items={[]}
-              loading={false}
-              onPreview={() => undefined}
-              onToast={showToast}
-            />
-          )}
-        </section>
+              )}
+            </section>
+          </>
+        )}
       </main>
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />

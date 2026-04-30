@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "colors": [
+    { "id": "cool-tech-blue", "label": "科技冷蓝", "phrase": "冷调科技蓝与浅灰白渐变，清透干净，偏中台与数据产品主色", "swatch": "#3b82f6" },
+    { "id": "viz-cyan-teal", "label": "大屏青绿", "phrase": "青绿到深青的电光渐变，适合数据大屏链路、指标高亮与状态流", "swatch": "#14b8a6" },
+    { "id": "command-indigo", "label": "指挥深蓝", "phrase": "深靛蓝与墨蓝递进，政企指挥舱、运维中台常用底色级强调", "swatch": "#4338ca" },
+    { "id": "mono-gray", "label": "极简黑白灰", "phrase": "高对比黑白与中性灰阶，无明显彩色倾向，适配暗色/浅色双主题", "swatch": "#a3a3a3" },
+    { "id": "slate-neutral", "label": "蓝灰中性", "phrase": "钢灰与浅钢蓝渐变，表格区、侧栏与标签页的企业后台中性色", "swatch": "#64748b" },
+    { "id": "hud-neon-cyan", "label": "暗底霓虹青", "phrase": "近黑底上以电光青作边缘光与高光线，HUD、驾驶舱式大屏点缀", "swatch": "#22d3ee" },
+    { "id": "ops-status-green", "label": "运行绿", "phrase": "低饱和松石绿配深墨绿阴影，适配正常可用、链路畅通类状态语义", "swatch": "#059669" },
+    { "id": "alert-amber", "label": "警示琥珀", "phrase": "克制琥珀橘与焦糖深棕，告警条、中风险档位与 KPI 预警信号色", "swatch": "#d97706" }
+  ],
+  "materials": [
+    { "id": "frosted-glass", "label": "磨砂玻璃", "phrase": "半透明磨砂玻璃，雾化折射与柔和高光，类似大屏卡片与浮层面板", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "brushed-steel", "label": "拉丝不锈钢", "phrase": "定向拉丝不锈钢，冷灰金属肌理与弱镜面反光，工业与机柜语境", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "anodized-aluminum", "label": "阳极铝金属", "phrase": "细拉丝阳极氧化铝，冷静微反光，数据中心与硬件产品审美", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "matte-plastic", "label": "哑光工程塑料", "phrase": "均匀哑光工程塑料涂层，漫反射无刺目高光，企业终端外壳质感", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "blast-titanium", "label": "钛灰喷砂金属", "phrase": "微孔喷砂钛灰金属，柔雾吸光无眩光镜面，适配暗底立体图标", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "dark-acrylic-panel", "label": "深色半透明亚克力", "phrase": "烟灰半透明亚克力镶边，内缘弱折射，叠压感类似驾驶舱层次面板", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "carbon-matte", "label": "碳纤维哑光", "phrase": "细密编织碳纤维纹理，深灰全哑光，科技硬件与车载 HMI 风格", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "piano-gloss", "label": "钢琴黑高光", "phrase": "钢琴黑漆镜面高光与利落收边，高管看板、旗舰控制台级点缀质感", "thumb": "./assets/material-placeholder.svg" }
+  ]
+}

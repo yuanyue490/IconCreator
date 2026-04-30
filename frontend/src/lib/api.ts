@@ -1,6 +1,12 @@
 import JSZip from "jszip";
 
-import type { AppSettings, MatchRequest, MatchResponse } from "@iconcraft/shared";
+import type {
+  AiGenerateRequest,
+  AiGenerateResponse,
+  AppSettings,
+  MatchRequest,
+  MatchResponse,
+} from "@iconcraft/shared";
 
 import { applySvgExportOptions } from "./svg-export";
 import { useSettingsStore } from "../stores/settings-store";
@@ -28,6 +34,23 @@ export async function matchWords(input: Omit<MatchRequest, "llm"> & { llm?: Part
   }
 
   return (await response.json()) as MatchResponse;
+}
+
+export async function generateAiIcons(input: AiGenerateRequest) {
+  const response = await fetch("/api/ai/generate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(payload?.message ?? "AI 生成请求失败");
+  }
+
+  return (await response.json()) as AiGenerateResponse;
 }
 
 export async function fetchSvgText(library: string, style: string, name: string) {

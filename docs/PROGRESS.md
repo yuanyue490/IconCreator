@@ -6,6 +6,18 @@
 
 ---
 
+## 最新更新（2026-04-30）
+
+- **正式工程 · AI 生成模块**：工作台 `AI 生成` 模式已从禁用切换为可用 UI；新增 `AiGenerateSection`，支持物体输入、B 端/大屏预置主色、材质选择、自定义覆盖、分辨率 / 比例、2 张候选结果、单张下载与复制图片。
+- **后端 · AI 生图代理**：新增 `/api/ai/generate` 与 `ai-image-service`，按 OpenAI 兼容 `/images/generations` 形态接入火山方舟 **Seedream 4.5**；请求同时传 `n` 与 `sequential_image_generation_options.max_images`，若接入点仍只回单张则自动补请求到 2 张；API Key 仅从后端环境变量读取，缺失时返回明确提示，不暴露给浏览器。
+- **原型 · AI 3D 生成策略**：单次由 **4 张候选** 调整为 **2 张**，与控费及产品默认一致。
+- **`ai-3d-icon-presets.json`**：主色与材质话术面向 **大屏可视化 + B 端**（指挥蓝、链路青绿、霓虹 HUD 点缀、状态绿/告警琥珀等；拉丝钢、喷砂钛灰、碳纤维、钢琴黑、深色亚克力面板等），替换偏消费/C 端审美的条目。**说明**：预置文案为写入 `prompt` 的中文 **`phrase`**，与风格模板占位符拼装后一并送模型；`swatch` 仅界面示意。详见 `docs/PRD.md` §2.2「预置 phrase 与文生图模型」。
+- **原型 · AI 3D 参数**：主色改为 **预置色板（`phrase` + `swatch`）+ 自定义词组覆盖**；材质改为 **预置卡片（`phrase` + `thumb`）+ 自定义词组覆盖**；各材质项暂共用 `prototype/assets/material-placeholder.svg`，后续只换各条 `thumb` 路径即可挂载真实示意图。
+- **配置拆分**：新增 `shared/config/ai-3d-icon-presets.json`，与已有的 `ai-3d-icon-style.json` 配套；共享类型补充 `Ai3dColorPreset` / `Ai3dMaterialPreset` / `Ai3dIconPresetsConfig`（`shared/src/types.ts`）。
+- **文档**：已同步修订 `docs/PRD.md`（模块 A：JSON / 预置 / Seedream）；`README.md` 仓库树补充上述配置文件路径。
+
+---
+
 ## 最新更新（2026-04-22）
 
 - **匹配历史**：`frontend/src/stores/match-history-store.ts`，`Zustand + persist(localStorage)`，最多保留 **10** 组；每次匹配成功prepend，旧组下沉；按组 **ZIP 导出**、详情预览均带组内 `library/style`。
@@ -145,7 +157,7 @@
 - Cal Sans 大标题 + Inter 正文的字体体系
 - 多层阴影 + ring-border 的表面处理
 - 顶部导航 + Tab 切换器（AI 生成 / 开源图标库）
-- AI 3D 生成器模块：Hero + 输入卡片 + 5 风格预设 + 4 宫格三态（空/加载/结果）
+- AI 3D 生成器模块：Hero + 输入卡片 + 5 风格预设 + **双列**三态（空/加载/结果）
 - 开源图标库模块：sticky 搜索栏 + 60 个 Iconify 真实图标渲染
 - 图标详情 Modal：SVG / PNG / React / Vue 四格式切换 + 尺寸滑块
 - Toast、hover、骨架动画等微交互
@@ -234,7 +246,7 @@ f:/VibeCoding/IconCreator/
 
 ### 4.1 近期优先项
 
-- [ ] 把 AI 生成结果正式接入工作台，补齐生成态结果卡片、预览与基础操作
+- [x] 把 AI 生成结果正式接入工作台，补齐生成态结果卡片、预览与基础操作
 - [ ] 为生成 / 导出链路加入尺寸调节能力，明确预设尺寸、滑杆交互与下载尺寸联动
 - [ ] 扩充多图标库 catalog，提升 Heroicons / Phosphor / Tabler 的覆盖率
 - [ ] 把 `systemPrompt` 拆成可组合策略块，降低手工改整段 prompt 的成本
@@ -244,7 +256,7 @@ f:/VibeCoding/IconCreator/
 
 ### 4.2 功能增强待办
 
-- [ ] AI 3D 生成功能从原型迁移到正式工程，并与当前工作台双模式切换打通
+- [x] AI 3D 生成功能从原型迁移到正式工程，并与当前工作台双模式切换打通
 - [ ] 浏览模式 `/browse` 的正式页面与单图导出能力
 - [x] 历史记录与最近匹配组持久化（`match-history-store`，最多 10 组）
 - [ ] 更完整的输入校验反馈与错误恢复交互
@@ -263,7 +275,7 @@ f:/VibeCoding/IconCreator/
 - [x] **品牌名**：已从 `IconCraft` 改为「图标大厨」（代码仓与包命名空间继续沿用 `IconCraft` / `@iconcraft/*`）
 - [ ] **Logo 设计**：当前是简单字标 `[厨]`，需要正式设计
 - [ ] **域名选型**
-- [ ] **SeeDream API 接入方式**：官方 API 还是通过第三方聚合
+- [x] **Seedream 4.5 API 接入方式**：当前按火山方舟 OpenAI 兼容 `/images/generations` 接入，密钥仅后端读取
 - [ ] **AI 匹配的 LLM 选型**：GPT-4o-mini / DeepSeek / Kimi 的具体基准测试
 - [ ] **免费额度策略**：匿名用户每日限多少次生成 / 匹配
 - [ ] **图标库许可证显示方式**：批量下载包是否自动附带 LICENSE

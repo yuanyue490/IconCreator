@@ -8,7 +8,7 @@
 
 产品只做一件事：**把自然语言输入，翻译成可直接下载使用的图标**。两种输出模式共用同一个输入框：
 
-- **生成模式（AI 3D）**：输入对象名称 → AI 生成 4 张 3D 风格原创图标
+- **生成模式（AI 3D）**：输入对象名称 → AI 生成 2 张 3D 风格原创图标
 - **匹配模式（开源SVG匹配）**：输入一组词 → AI 智能匹配出一组**同库同款**的开源图标
 
 产品形态是**工具而非平台**：第一屏即工作区，无需注册，无需教程，不做营销堆砌。
@@ -34,60 +34,68 @@
 
 ### 模块 A：AI 3D 图标生成
 
-#### 2.1 核心流程
+#### 2.1 核心流程（目标态）
 
 ```plaintext
-用户输入对象名称 → 系统补全提示词 → 调用 SeeDream API → 返回 4 张 3D 风格图
+用户填写「生成物体」+ 「主色调」+「材质」→ 系统按模板拼出 Positive / Negative
+→ （可选）分辨率档位 + 图片比例 → 调用火山方舟 Seedream 图像模型（例如 4.5）→ 返回 2 张候选图
 ```
 
-#### 2.2 提示词系统
+#### 2.2 本地 JSON 与三开放参数
 
-**内置提示词模板**（用户不可见）：
+**风格模板**：`shared/config/ai-3d-icon-style.json`（原型同步副本见 `prototype/assets/`）。
 
-```plaintext
-A 3D rendered icon of [OBJECT], isometric view, clean minimalist style,
-soft gradient lighting, pastel color scheme, floating on solid background,
-studio quality, high detail, 4K resolution
-```
+- **`type`**：模板标识（如 `3d_icon`），供 UI / 服务端路由。
+- **`vars`**：`{生成物体}`、`{主色调}`、`{材质}` 等与正文占位符一致的 token，服务端或前端替换后再送模型。
+- **`prompt`**：主提示词（Positive）。
+- **`negative`**：负面提示词；与 vars 中出现的同一 token（若有）也需替换逻辑支持。
 
-**用户交互**：
+**主色调（预置色板 + 自定义）**：
 
-- **最小输入**：只需填写对象名称，如 `咖啡杯`、`文件夹`、`火箭`
-- **风格切换**（5 种预设，一键应用对应 prompt 片段）：
-  1. **极简主义**：`clean minimalist, soft lighting, pastel colors`
-  2. **玻璃拟态**：`glassmorphism, translucent material, frosted glass effect`
-  3. **粘土风格**：`clay render, matte finish, playful cartoon style`
-  4. **赛博朋克**：`cyberpunk neon, holographic, futuristic tech`
-  5. **金属质感**：`metallic material, chrome finish, reflective surface`
-- **高级选项**（折叠，默认收起）：颜色倾向（暖/冷/单色/彩虹）、视角（等轴测/正面/俯视）
+- 预置色板：`shared/config/ai-3d-icon-presets.json` 内 `colors[]`，每项包含 **展示标签**、`swatch`（UI 示意色）、**写入 prompt 的 `phrase`**（中文描述）。
+- **自定义**：用户可在「自定义主色调」输入框填写任意词组；**非空时优先生效**，并弱化预置色板选中态以示覆盖。
+
+**材质（卡片 + 自定义 + 缩略图）**：
+
+- 预置：`ai-3d-icon-presets.json` 内 `materials[]`，每项含 **标签**、**写入 prompt 的 `phrase`、`thumb`**（相对资源路径）。
+- MVP / 原型阶段各预置项可共用**同一张占位图**（如 `prototype/assets/material-placeholder.svg`）；后续逐项替换为真实材质示意图，不改变 JSON 字段结构。
+- **自定义**：「自定义材质」输入框同上，非空优先生效。
+
+**预置 phrase 与文生图模型（可理解性）**：
+
+- `colors[].phrase` / `materials[].phrase` 为**可画面化的自然语言**：描述色相倾向、渐变/明暗关系、哑光或反光等观感，并可带 **B 端 / 大屏 / HUD** 等行业语境词，便于模型对齐「指挥蓝」「链路青绿」等抽象标签背后的视觉预期。
+- 运行时由 `ai-3d-icon-style.json` 的占位符 **`{主色调}`、`{材质}`** 代入整段 **`prompt`**，与 **`negative`** 一并提交；通常为**中文为主体的单条 Positive**，方舟 Seedream 等多模态文生图模型一般具备中文语义理解，可与模板中现有中文句式混用而无须整条改为英文。
+- **`swatch` 仅占位 UI**：供色板圆点预览，**默认不写入**模型请求正文；若产品未来要在请求中附带 HEX，需在服务端另行拼接并在此文档增补字段约定。
+- 若实测某档位语言效果不稳、或接入层强制英文入参，可在网关增加 **phrase → 英文扩展句**（或与中文并列输出），不改变 JSON 结构中「以 phrase 为唯一真源」的维护方式。
+
+**提示词预览**：工作台侧应实时渲染替换后的 Positive / Negative，与实际上屏（或上传）的请求体一致。
+
+早期「极简 / 玻璃 / 粘土 / 赛博 / 金属」五段英文 chip 方案已废弃；由 **`ai-3d-icon-style.json` + `ai-3d-icon-presets.json`** 统一管理画风与可调参数字段。
 
 #### 2.3 生成参数
 
-**SeeDream API 调用**：
+**方舟 Seedream 系列（原型对齐 4.5）**：
 
-- 模型：SeeDream 默认模型
-- 分辨率：1024×1024（标准）/ 2048×2048（高清，付费）
-- 一次生成：4 张候选
-- CFG Scale：7–9
-- 步数：30–50
+- **分辨率**：与「图片比例」在 UI 上**分两路选择**（如 1K / 2K / 4K 与 1:1、16:9 等）；服务端合并为文档允许的 `size` 或其它等价字段。
+- **一次生成**：2 张候选（与现行原型一致）。
+- 历史文档中的 CFG / 固定 1024 等仅以**厂商当前 API**为准，不强制写死在 PRD。
 
 **生成时间**：
 
-- 标准：20–40 秒
-- 高清：60–90 秒
+- 与档位、队列相关，仍可参考 **常规数十秒量级**做体验预期。
 
 #### 2.4 结果与操作
 
 **展示**：
 
-- 4 宫格，悬停浮层操作
-- 显示所用提示词（可复制）
+- 2 张候选，悬停浮层操作
+- 显示所用 Positive / Negative（可复制）
 
 **操作**：
 
 - 单张下载 / 批量下载（PNG，透明或白底）
 - 单张复制图片到剪贴板（走 `navigator.clipboard.write` + `ClipboardItem`，方便直接粘贴到 Figma / Notion / 即时通讯）
-- 重新生成（保持输入，重抽 4 张）
+- 重新生成（保持输入，重抽 2 张）
 - 大图预览
 
 #### 2.5 图生图（Phase 2）
@@ -174,6 +182,7 @@ ${userWords.map((w, i) => `${i + 1}. ${w}`).join('\n')}
 
 **当前开发版实现说明（2026-04-22）**：
 
+- **原型 AI 生成（2026-04-30）**：`prototype/index.html` 已接入 **`ai-3d-icon-style.json`**（Positive / Negative + 三占位符替换预览）与 **`ai-3d-icon-presets.json`**（色板、`phrase`、`thumb`）；材质预置项当前共用 **`material-placeholder.svg`**，后续逐项替换示意图即可，无需改交互结构。
 - 前端已开放 `baseURL`、`apiKey`、`model`、`systemPrompt` 配置，并持久化到浏览器本地，便于切换兼容 OpenAI 协议的模型服务并手动微调匹配策略。
 - 匹配历史：每次成功匹配新增一组结果（`Zustand + localStorage`），**最新在前**，最多保留 **10** 组；历史组可单独「导出」ZIP，避免与单次结果混淆。
 - 后端当前匹配链路已落地为：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配 -> 未匹配`。
@@ -295,7 +304,7 @@ Phase 2 增加：Feather、Material Symbols、Remix Icon。
 - **服务端**：Node.js + Fastify（轻量，低延迟）
 - **缓存**：进程内 `Map`（MVP），后续可升级为 Redis
 - **数据库**：PostgreSQL（Phase 2 用户系统起用；MVP 阶段无需）
-- **AI 图像接口**：SeeDream API
+- **AI 图像接口**：火山方舟 **Seedream 4.5** 图像生成 API（模型名以控制台接入点为准，如 `doubao-seedream-4-5` 或带日期版本的 4.5 接入点；`size` / 档位与文档对齐）
 - **AI 匹配接口**：OpenAI 兼容协议（支持 OpenAI / DeepSeek / Kimi / 自部署）
 - **图标元数据源**：Iconify API（实时查询 + 本地 JSON 索引）
 - **校验**：Zod
@@ -346,18 +355,25 @@ async function matchIconGroup(
 }
 ```
 
-#### 3.3.2 SeeDream API 集成
+#### 3.3.2 Seedream 4.5 API 集成
 
 ```javascript
 const prompt = `A 3D rendered icon of ${userInput}, ${stylePrompt},
   floating on solid background, studio quality, 4K`;
 
-const response = await fetch('https://api.seedream.ai/v1/generate', {
+const response = await fetch(`${ARK_BASE_URL}/images/generations`, {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${API_KEY}` },
   body: JSON.stringify({
-    prompt, num_images: 4, width: 1024, height: 1024,
-    steps: 40, cfg_scale: 8,
+    model: 'doubao-seedream-4-5',
+    prompt,
+    negative_prompt,
+    n: 2,
+    size: '2048x2048',
+    response_format: 'url',
+    sequential_image_generation: 'auto',
+    sequential_image_generation_options: { max_images: 2 },
+    watermark: false,
   }),
 });
 ```
@@ -405,7 +421,7 @@ img.onload = () => {
 │                                                          │
 │  ┌────────────────────────────────────────────────────┐ │
 │  │              输出工作区（按模式切换）              │ │
-│  │  - AI 模式：4 宫格结果                            │ │
+│  │  - AI 模式：2 张候选结果                          │ │
 │  │  - 匹配模式：卡片网格展示                         │ │
 │  └────────────────────────────────────────────────────┘ │
 │                                                          │
@@ -414,20 +430,20 @@ img.onload = () => {
 
 ### 4.3 输入区交互
 
-- **模式切换**：顶部两个 radio-style 胶囊；当前开发版默认落在 `SVG匹配`，`AI 生成` 入口先保留为禁用占位
-- **输入框**：
+- **模式切换**：顶部两个 radio-style 胶囊；正式产品默认模式以发布策略为准。当前正式工作台已接入 **AI 生成**（本地 JSON + 预置色板 / 材质 + 后端 `/api/ai/generate`）与 **SVG 匹配** 两种模式。
+- **输入区**：
   - 自适应高度（单行 → 多行）
-  - 当前开发版：`Ctrl/Cmd + Enter` 提交，`Enter` 换行
-  - 后续可增强为多词实时解析与词 chip 展示
+  - 当前开发版（匹配模式）：`Ctrl/Cmd + Enter` 提交，`Enter` 换行
+  - **AI 生成**：`生成物体` 输入；主色「预置色板 + 自定义词」；材质「预置卡片 + 自定义词」；分辨率 / 比例两列下拉。
 - **参数区**：
-  - AI 模式：5 种风格 chip + 高级选项（折叠），仍处于待迁移状态
+  - AI 模式：画风由 **`ai-3d-icon-style.json`** 模板决定；调色 / 材质由 **`ai-3d-icon-presets.json`** 与自定义框决定（见§2.2）；高级区可折叠（视角等示例扩展）。
   - 匹配模式：`{图标库, 风格}` 二级下拉 + 当前组合 chip；"AI 帮我选"仍为后续规划
 - **生成按钮**：统一白底黑字，高优先级 CTA
 
 ### 4.4 AI 模式输出区
 
 - 顶部：当前输入 + 风格，耗时统计
-- 4 宫格结果，hover 浮层操作：
+- 双列 2 张候选结果，hover 浮层操作：
   - **下载该张**（`lucide:download`）：触发单张 PNG 下载
   - **复制图片到剪贴板**（`lucide:copy`）：把该张图像以 PNG `Blob` 形式写入系统剪贴板，便于直接粘贴到 Figma / Notion / 即时通讯
   - **放大预览**（`lucide:maximize-2`）：打开大图查看 Modal
@@ -459,7 +475,7 @@ img.onload = () => {
 
 ### 4.7 空态引导
 
-- AI 模式空态：3–5 个点击可填充的示例词（咖啡杯、火箭、相机...）
+- AI 模式：预置色板 / 材质卡片已提供默认选中项；空态可辅以 **一键示例物体名**（咖啡杯、火箭、相机），并提示用户可先点选预置再通过自定义框微调。（原型可持续迭代占位策略。）
 - 匹配模式空态：3 个完整示例组（"导航栏"、"电商购物流程"、"社交媒体"），一键填充
 
 ---
@@ -495,10 +511,10 @@ img.onload = () => {
 
 **AI 3D 生成器**：
 
-- 5 种风格预设
-- 4 张候选图
-- PNG 下载（1024×1024）
-- 尺寸调节能力（预设尺寸 + 滑杆，导出结果与当前尺寸保持一致）
+- **本地可调配置**：`ai-3d-icon-style.json`（prompt / negative / vars）与 `ai-3d-icon-presets.json`（色板、`phrase`、材质 **`thumb`**；占位图后续换真实材质示意图）
+- 主色调：**预置 swatch + 自定义词**，自定义非空优先
+- 材质：**预置卡片（图+词） + 自定义词**，自定义非空优先
+- 2 张候选图；PNG 下载与方舟侧分辨率 / 比例由实际上线接入为准（原型已双下拉示意）
 
 **AI 图标SVG匹配**：
 
@@ -581,9 +597,9 @@ img.onload = () => {
   - **应对**：JSON schema 强约束 + 本地校验 + 模糊匹配兜底
 - **LLM 延迟**：影响"开箱即用"体验
   - **应对**：匹配结果缓存（相同输入直接命中 Redis）；可流式返回结果
-- **AI 生成不稳定**：SeeDream 输出偶发偏离
-  - **应对**：一次 4 张，优化 prompt 模板
-- **API 成本**：LLM + SeeDream 双重成本
+- **AI 生成不稳定**：Seedream 输出偶发偏离
+  - **应对**：一次 2 张，优化 prompt 模板
+- **API 成本**：LLM + Seedream 双重成本
   - **应对**：免费用户每日配额；匹配结果缓存命中率目标 > 40%
 
 ### 8.2 产品风险
@@ -624,7 +640,7 @@ img.onload = () => {
 
 ## 十、附录
 
-### 10.1 SeeDream API 文档
+### 10.1 Seedream 4.5 API 文档
 
 - 官方文档：（待补充）
 - 定价：（待补充）

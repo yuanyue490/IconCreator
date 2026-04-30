@@ -9,6 +9,17 @@ export {
 } from "./constants.js";
 export type { IconLibraryOption, IconLibraryStyleOption } from "./constants.js";
 export type {
+  Ai3dColorPreset,
+  Ai3dIconPresetsConfig,
+  Ai3dIconStyleConfig,
+  Ai3dIconStylesCatalog,
+  Ai3dIconStyleVariant,
+  Ai3dMaterialPreset,
+  AiGeneratedImage,
+  AiGenerateRequest,
+  AiGenerateResponse,
+  AiImageAspectRatio,
+  AiImageResolution,
   AppSettings,
   IconCatalogEntry,
   IconLibraryId,

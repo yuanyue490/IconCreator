@@ -13,6 +13,54 @@ export interface PromptPreset {
   order: number;
 }
 
+/** 本地 JSON 配置的 3D 图标生图风格（vars 占位符与 prompt/negative 中的 token 对应） */
+export interface Ai3dIconStyleConfig {
+  type: string;
+  vars: {
+    object: string;
+    color: string;
+    material: string;
+  };
+  prompt: string;
+  negative: string;
+}
+
+/** 多套提示词模板中的一套（供前端整体风格切换） */
+export interface Ai3dIconStyleVariant extends Ai3dIconStyleConfig {
+  id: string;
+  label: string;
+  /** 简短说明，仅 UI 辅助 */
+  description?: string;
+}
+
+/** `shared/config/ai-3d-icon-styles.json` 根结构 */
+export interface Ai3dIconStylesCatalog {
+  version: number;
+  styles: Ai3dIconStyleVariant[];
+}
+
+/** 主色调预置：`phrase` 将写入 prompt 中的 {主色调} 占位；`swatch` 仅 UI 示意 */
+export interface Ai3dColorPreset {
+  id: string;
+  label: string;
+  phrase: string;
+  swatch: string;
+}
+
+/** 材质预置：`thumb` 为相对站点根的路径，后期可换为实拍/渲染材质图 */
+export interface Ai3dMaterialPreset {
+  id: string;
+  label: string;
+  phrase: string;
+  thumb: string;
+}
+
+export interface Ai3dIconPresetsConfig {
+  version: number;
+  colors: Ai3dColorPreset[];
+  materials: Ai3dMaterialPreset[];
+}
+
 export interface AppSettings {
   baseURL: string;
   apiKey: string;
@@ -22,6 +70,38 @@ export interface AppSettings {
   exportIconSizePx: number;
   /** 单色：作用于 SVG 根 `color` 及 `currentColor` 链；与列表/弹窗里 Icon 预览一致 */
   exportIconColor: string;
+}
+
+export type AiImageResolution = "1K" | "2K" | "4K";
+
+export type AiImageAspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
+
+export interface AiGenerateRequest {
+  object: string;
+  colorPhrase: string;
+  materialPhrase: string;
+  prompt: string;
+  negativePrompt: string;
+  resolution: AiImageResolution;
+  aspectRatio: AiImageAspectRatio;
+  count: 2;
+}
+
+export interface AiGeneratedImage {
+  id: string;
+  url: string | null;
+  b64Json: string | null;
+  revisedPrompt?: string | null;
+}
+
+export interface AiGenerateResponse {
+  images: AiGeneratedImage[];
+  meta: {
+    model: string;
+    size: string;
+    count: number;
+    durationMs: number;
+  };
 }
 
 export interface MatchRequest {

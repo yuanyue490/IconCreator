@@ -9,8 +9,9 @@
     "check": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@iconcraft/shared": "workspace:*",
     "@fastify/cors": "^11.2.0",
+    "@iconcraft/shared": "workspace:*",
+    "dotenv": "^17.4.2",
     "fastify": "^5.8.5",
     "zod": "^4.3.6"
   },

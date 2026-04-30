@@ -1,8 +1,17 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import { config as loadEnv } from "dotenv";
 
+import { aiRoute } from "./routes/ai.js";
 import { iconRoute } from "./routes/icons.js";
 import { matchRoute } from "./routes/match.js";
+
+const backendRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+loadEnv({ path: resolve(process.cwd(), ".env"), override: false });
+loadEnv({ path: resolve(backendRoot, ".env"), override: false });
 
 const app = Fastify({
   logger: true,
@@ -14,6 +23,7 @@ await app.register(cors, {
 
 app.get("/api/health", async () => ({ ok: true }));
 
+await app.register(aiRoute);
 await app.register(matchRoute);
 await app.register(iconRoute);
 

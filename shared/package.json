@@ -11,6 +11,9 @@
       "default": "./dist/index.js"
     },
     "./config/prompt-presets.json": "./config/prompt-presets.json",
+    "./config/ai-3d-icon-style.json": "./config/ai-3d-icon-style.json",
+    "./config/ai-3d-icon-styles.json": "./config/ai-3d-icon-styles.json",
+    "./config/ai-3d-icon-presets.json": "./config/ai-3d-icon-presets.json",
     "./config/icon-catalog/lucide/linear/aliases.json": "./config/icon-catalog/lucide/linear/aliases.json",
     "./config/icon-catalog/lucide/linear/names.json": "./config/icon-catalog/lucide/linear/names.json",
     "./config/icon-catalog/heroicons/linear/aliases.json": "./config/icon-catalog/heroicons/linear/aliases.json",

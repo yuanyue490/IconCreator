@@ -54,6 +54,18 @@
     /* ---------- 通用 ---------- */
     .is-hidden { display: none !important; }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .divider {
       height: 1px;
       background: rgba(255, 255, 255, 0.06);
@@ -229,6 +241,134 @@
     textarea.input-area::placeholder,
     input.input-plain::placeholder {
       color: #5a5a5a;
+    }
+
+    /* ---------- 方舟生图 · 下拉（分辨率 / 比例） ---------- */
+    .ark-select-shell {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 100%;
+      max-width: 220px;
+    }
+    .ark-select-shell--wide {
+      max-width: min(280px, 100%);
+    }
+    .ark-select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      background: #111;
+      color: #fafafa;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+      font-family: inherit;
+      font-size: 12.5px;
+      line-height: 1.3;
+      padding: 7px 32px 7px 12px;
+      cursor: pointer;
+      transition: box-shadow 0.15s ease;
+    }
+    .ark-select:hover {
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16);
+    }
+    .ark-select:focus {
+      outline: none;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.22),
+        0 0 0 3px rgba(255,255,255,0.04);
+    }
+    .ark-select option {
+      background: #141414;
+      color: #fafafa;
+    }
+
+    /* ---------- AI 生成：预置色板 + 材质卡（占位图后续替换） ---------- */
+    .preset-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .preset-swatches.presets-suppressed .preset-swatch-btn {
+      opacity: 0.38;
+      filter: saturate(0.65);
+    }
+    .preset-swatch-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      padding: 0;
+      flex-shrink: 0;
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.35);
+      transition: transform 0.12s ease, border-color 0.12s ease, opacity 0.15s ease;
+    }
+    .preset-swatch-btn:hover {
+      transform: scale(1.06);
+    }
+    .preset-swatch-btn.is-active {
+      border-color: #fafafa;
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 0 3px rgba(250, 250, 250, 0.2);
+    }
+    .material-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap: 10px;
+    }
+    .material-preset-grid.presets-suppressed .material-preset-card {
+      opacity: 0.4;
+      filter: grayscale(0.2);
+    }
+    .material-preset-card {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 7px;
+      padding: 8px;
+      margin: 0;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #131313;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+      color: inherit;
+      text-align: left;
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+    }
+    .material-preset-card:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+        0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+    .material-preset-card.is-active {
+      box-shadow:
+        inset 0 0 0 2px rgba(250, 250, 250, 0.45),
+        0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+    .material-preset-card img {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #0e0e0e;
+      display: block;
+    }
+    .material-preset-label {
+      font-size: 11.5px;
+      line-height: 1.25;
+      font-weight: 500;
+      color: #d0d0d0;
+      text-align: center;
     }
 
     /* ---------- 骨架 ---------- */
@@ -671,7 +811,8 @@
   <!-- ============================= -->
   <!-- 主工作台（打开即见）         -->
   <!-- ============================= -->
-  <main id="workbench" class="max-w-[920px] mx-auto px-6 pt-10 pb-24">
+  <!-- 略增宽：AI 模式增加「分辨率」chip 后与参数区并排更从容 -->
+  <main id="workbench" class="max-w-[960px] mx-auto px-6 pt-10 pb-24">
     <!-- Hero：标题图片位 + 当前功能说明 -->
     <section class="mb-8 text-center">
       <!-- 标题图片位：替换 src 即可换图 -->
@@ -706,53 +847,152 @@
 
       <!-- 当前功能说明（随模式切换的辅助说明） -->
       <p id="feature-desc" class="feature-desc mt-3">
-        用一句话描述对象，AI 将为你生成 4 张 3D 风格的精美图标候选
+        主色调用预置色板 + 可选自定义词；材质用预置卡（当前共用水晶占位图）+ 可选自定义。完整提示词由 <span class="font-mono text-[#8a8a8a]">ai-3d-icon-style.json</span> 产出
       </p>
     </section>
 
     <!-- 工作台卡片 -->
     <div class="surface-raised rounded-2xl p-5">
-      <!-- 输入框 -->
-      <div class="input-shell px-4 py-3">
-        <!-- AI 模式输入（与匹配模式保持同样的默认 2 行高度） -->
-        <textarea
-          id="input-ai"
-          class="input-area text-[15px] leading-[1.5]"
-          rows="2"
-          placeholder="输入对象名称，如 咖啡杯 / 火箭 / 文件夹 / 相机"
-        ></textarea>
-        <!-- 匹配模式输入 -->
+      <!-- AI：三参数（与 shared/config/ai-3d-icon-style.json 中 vars 对应） -->
+      <div id="ai-input-panel" class="input-shell px-4 py-3 space-y-3">
+        <div>
+          <label for="var-object" class="block text-[11.5px] text-[#5a5a5a] uppercase tracking-wider mb-1.5">
+            生成物体
+          </label>
+          <textarea
+            id="var-object"
+            class="input-area text-[15px] leading-[1.5]"
+            rows="2"
+            placeholder="如：咖啡杯 / 火箭 / 文件夹 / 相机"
+            autocomplete="off"
+          ></textarea>
+        </div>
+        <div id="ai-presets-mount">
+          <!-- 主色调：预置色板 + 自定义词组（自定义非空时优先生效） -->
+          <div>
+            <div class="flex items-baseline justify-between gap-2 flex-wrap mb-1.5">
+              <span class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider">主色调</span>
+              <span class="text-[10px] text-[#5a5a5a]">点选圆点或在下框输入自定义描述</span>
+            </div>
+            <div id="color-palette-host" class="preset-swatches mb-3" aria-label="预置色板"></div>
+            <label for="var-color-custom" class="sr-only">自定义主色调</label>
+            <input
+              id="var-color-custom"
+              type="text"
+              class="input-plain h-10 px-3 rounded-lg text-[14px] w-full"
+              style="background: #161616; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); border-radius: 10px;"
+              placeholder="可选：自定义主色调词组（将覆盖上方预置）"
+              autocomplete="off"
+            />
+          </div>
+
+          <!-- 材质：预置卡片（thumb 占位，后期逐项替换材质图）+ 自定义 -->
+          <div>
+            <div class="flex items-baseline justify-between gap-2 flex-wrap mb-1.5">
+              <span class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider">材质</span>
+              <span class="text-[10px] text-[#5a5a5a]">点击下方卡片或使用自定义词组</span>
+            </div>
+            <div id="material-presets-host" class="material-preset-grid mb-3" aria-label="预置材质"></div>
+            <label for="var-material-custom" class="sr-only">自定义材质</label>
+            <input
+              id="var-material-custom"
+              type="text"
+              class="input-plain h-10 px-3 rounded-lg text-[14px] w-full"
+              style="background: #161616; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); border-radius: 10px;"
+              placeholder="可选：自定义材质描述（将覆盖上方预置）"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <p class="text-[11px] text-[#5a5a5a] leading-snug font-mono">
+          <span class="text-[#6a6a6a]">风格</span> <code class="text-[#8a8a8a]">shared/config/ai-3d-icon-style.json</code>
+          · <span class="text-[#6a6a6a]">预置</span> <code class="text-[#8a8a8a]">shared/config/ai-3d-icon-presets.json</code>
+          <span class="text-[#5a5a5a]">（原型可复制到</span>
+          <code class="text-[#8a8a8a]">prototype/assets/</code>
+          <span class="text-[#5a5a5a]">）</span>
+        </p>
+      </div>
+
+      <!-- 匹配模式输入 -->
+      <div id="match-input-panel" class="input-shell px-4 py-3 is-hidden">
         <textarea
           id="input-match"
-          class="input-area text-[15px] leading-[1.5] is-hidden"
+          class="input-area text-[15px] leading-[1.5]"
           rows="2"
           placeholder="输入一组词（空格 / 逗号 / 换行分隔），如：首页 消息 设置 搜索 用户 退出"
         ></textarea>
       </div>
 
-      <!-- 参数区 + 提交 -->
-      <div class="mt-3 flex items-center justify-between gap-3 flex-wrap">
+      <!-- 参数区 + 提交（窄屏纵向堆叠，宽屏参数区与 CTA 并排） -->
+      <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <!-- AI 模式参数 -->
-        <div id="params-ai" class="flex items-center gap-2 flex-wrap">
-          <span class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider mr-1">风格</span>
-          <div id="style-chips" class="flex items-center gap-1.5 flex-wrap">
-            <button class="chip is-active" data-style="minimal">极简主义</button>
-            <button class="chip" data-style="glass">玻璃拟态</button>
-            <button class="chip" data-style="clay">粘土风格</button>
-            <button class="chip" data-style="cyber">赛博朋克</button>
-            <button class="chip" data-style="metal">金属质感</button>
+        <div id="params-ai" class="flex flex-col gap-3 min-w-0 flex-1">
+          <!-- 上行：输出与技术参数（画风由 JSON prompt 固定，此处不再选 chip） -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider mr-1 shrink-0">规格</span>
+            <span class="text-[11px] text-[#5a5a5a] shrink-0 hidden sm:inline">分辨率 / 比例见下</span>
+            <button
+              class="btn-subtle h-7 px-2 rounded-md text-[11.5px] inline-flex items-center gap-1 ml-auto shrink-0"
+              id="advanced-toggle"
+              type="button"
+            >
+              <iconify-icon icon="lucide:sliders-horizontal" class="text-[12px]"></iconify-icon>
+              高级
+            </button>
           </div>
-          <button
-            class="btn-subtle h-7 px-2 rounded-md text-[11.5px] inline-flex items-center gap-1"
-            id="advanced-toggle"
-          >
-            <iconify-icon icon="lucide:sliders-horizontal" class="text-[12px]"></iconify-icon>
-            高级
-          </button>
+          <!-- 下行：输出规格（分辨率 + 图片比例分两列下拉；对接 Seedream 4.5 时由后端合并映射） -->
+          <div class="flex flex-wrap items-start gap-x-8 gap-y-3">
+            <div class="flex flex-col gap-1.5 min-w-[148px]">
+              <label
+                for="select-resolution"
+                class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider cursor-pointer select-none"
+                title="对应方舟侧清晰度档位，与右边的图片比例相互独立选型"
+              >分辨率</label>
+              <div class="ark-select-shell">
+                <select id="select-resolution" class="ark-select" autocomplete="off">
+                  <option value="1K">1K · 较快</option>
+                  <option value="2K" selected>2K · 推荐</option>
+                  <option value="4K">4K · 更清晰</option>
+                </select>
+                <iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1.5 min-w-[148px]">
+              <label
+                for="select-ratio"
+                class="text-[11.5px] text-[#5a5a5a] uppercase tracking-wider cursor-pointer select-none"
+              >图片比例</label>
+              <div class="ark-select-shell ark-select-shell--wide max-w-none">
+                <select id="select-ratio" class="ark-select max-w-none" autocomplete="off">
+                  <option value="1:1" selected>1 : 1 正方形 · 图标推荐</option>
+                  <option value="4:3">4 : 3 横向</option>
+                  <option value="3:4">3 : 4 纵向</option>
+                  <option value="16:9">16 : 9 宽屏</option>
+                  <option value="9:16">9 : 16 竖幅</option>
+                  <option value="3:2">3 : 2</option>
+                  <option value="2:3">2 : 3</option>
+                </select>
+                <iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-[#5a5a5a] leading-snug">
+            正反面提示词内容由 JSON 的 <span class="font-mono text-[#8a8a8a]">prompt</span> /
+            <span class="font-mono text-[#8a8a8a]">negative</span> 提供；占位符与
+            <span class="font-mono text-[#8a8a8a]">vars</span> 对齐。下方为 Seedream 4.5 的
+            <span class="font-mono text-[#8a8a8a]">size</span> / 等价参数（是否与比例分字段请以当前模型文档为准）。
+            <a
+              href="https://www.volcengine.com/docs/82379/1541523?lang=zh"
+              class="text-[#a0a0a0] underline decoration-white/15 hover:text-white"
+              target="_blank"
+              rel="noreferrer"
+            >火山方舟图片生成 API</a>
+          </p>
         </div>
 
         <!-- 匹配模式参数 -->
-        <div id="params-match" class="is-hidden flex items-center gap-2 flex-wrap">
+        <div id="params-match" class="is-hidden flex items-center gap-2 flex-wrap flex-1 min-w-0">
           <!-- 库选择 -->
           <div class="relative">
             <button
@@ -816,59 +1056,64 @@
         <!-- 提交按钮 -->
         <button
           id="submit-btn"
-          class="btn-primary h-9 px-5 rounded-lg text-[13.5px] inline-flex items-center gap-2"
+          class="btn-primary h-9 px-5 rounded-lg text-[13.5px] inline-flex items-center gap-2 shrink-0 self-end sm:self-start sm:mt-0.5"
         >
           <iconify-icon icon="lucide:arrow-right" class="text-[15px]" id="submit-icon"></iconify-icon>
-          <span id="submit-label">生成 4 张</span>
+          <span id="submit-label">生成 2 张</span>
         </button>
       </div>
 
-      <!-- 高级选项（AI 模式）-->
-      <div id="advanced-panel" class="is-hidden mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-5">
+      <!-- 高级选项（AI）：视角等仍写入业务逻辑/扩展 prompt；主色与材质已上升为三参数 -->
+      <div id="advanced-panel" class="is-hidden mt-4 pt-4 border-t border-white/5 grid grid-cols-1 gap-5">
         <div>
-          <div class="text-[11.5px] text-[#5a5a5a] mb-2 uppercase tracking-wider">颜色倾向</div>
+          <div class="text-[11.5px] text-[#5a5a5a] mb-2 uppercase tracking-wider">视角（示例 · 可拼入 prompt 扩展）</div>
           <div class="flex flex-wrap gap-1.5">
-            <button class="chip is-active">自动</button>
-            <button class="chip">暖色调</button>
-            <button class="chip">冷色调</button>
-            <button class="chip">单色</button>
-            <button class="chip">彩虹</button>
+            <button type="button" class="chip is-active">等轴测</button>
+            <button type="button" class="chip">正面</button>
+            <button type="button" class="chip">俯视</button>
           </div>
         </div>
-        <div>
-          <div class="text-[11.5px] text-[#5a5a5a] mb-2 uppercase tracking-wider">视角</div>
-          <div class="flex flex-wrap gap-1.5">
-            <button class="chip is-active">等轴测</button>
-            <button class="chip">正面</button>
-            <button class="chip">俯视</button>
-          </div>
+        <div class="text-[11px] text-[#5a5a5a] leading-relaxed border-t border-white/5 pt-4">
+          <span class="text-[#8a8a8a] uppercase tracking-wider text-[10.5px]">与接入对齐</span>
+          正式对接时由上方面板的「分辨率 / 图片比例」两路选择，在服务端组合为 Seedream&nbsp;4.5 可用的请求（可能合并为单一的
+          <span class="font-mono text-[#a0a0a0]">size</span> 宽高字符串，或使用文档中的档位 + 比例字段）；批量张数仍为
+          <span class="font-mono text-[#a0a0a0]">n&nbsp;=&nbsp;2</span>。
+          <a class="text-[#a0a0a0] underline decoration-white/20 hover:text-white" href="https://www.volcengine.com/docs/82379/1541523?lang=zh" target="_blank" rel="noreferrer">火山方舟文档</a>。
+          需在模型允许的像素范围与宽高比区间内做校验与报错提示。
         </div>
       </div>
     </div>
 
-    <!-- ============================= -->
-    <!-- 提示词预览（仅 AI 模式）      -->
-    <!-- 对象名称部分：输入框内容 → 高亮 / 未输入 → dashed 占位 -->
-    <!-- ============================= -->
+    <!-- 提示词预览（仅 AI 模式）：与本地 JSON 的 prompt / negative 一致 -->
     <div id="prompt-preview" class="surface rounded-xl p-3.5 mt-3 flex items-start gap-3">
-      <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5"></iconify-icon>
+      <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5 shrink-0"></iconify-icon>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[11px] text-[#5a5a5a] uppercase tracking-wider">
-            提示词预览 · <span id="preview-style-label" class="text-[#a0a0a0] normal-case">极简主义</span>
-          </span>
+        <div class="flex items-center justify-between mb-2 gap-2 flex-wrap">
+          <div>
+            <span class="text-[11px] text-[#5a5a5a] uppercase tracking-wider">
+              提示词预览 · 风格 <span id="preview-style-label" class="text-[#a0a0a0] normal-case">3d_icon</span>
+            </span>
+            <div id="preview-config-status" class="text-[10px] text-[#5a5a5a] mt-0.5 font-mono"></div>
+          </div>
           <button
-            class="btn-subtle h-6 px-2 rounded text-[11.5px] inline-flex items-center gap-1"
+            class="btn-subtle h-6 px-2 rounded text-[11.5px] inline-flex items-center gap-1 shrink-0"
             id="preview-copy-btn"
-            title="复制完整提示词"
+            type="button"
+            title="复制 Positive + Negative（已代入当前三参数）"
           >
             <iconify-icon icon="lucide:copy" class="text-[12px]"></iconify-icon>
             复制
           </button>
         </div>
+        <div class="text-[10px] text-[#6a6a6a] uppercase tracking-wider mb-1">Positive</div>
         <div
-          id="preview-text"
-          class="text-[12.5px] text-[#a0a0a0] leading-relaxed font-mono break-words"
+          id="preview-prompt"
+          class="text-[12.5px] text-[#c8c8c8] leading-relaxed font-mono break-words whitespace-pre-wrap"
+        ></div>
+        <div class="text-[10px] text-[#6a6a6a] uppercase tracking-wider mb-1 mt-4">Negative</div>
+        <div
+          id="preview-negative"
+          class="text-[12.5px] text-[#8a8a8a] leading-relaxed font-mono break-words whitespace-pre-wrap"
         ></div>
       </div>
     </div>
@@ -925,6 +1170,9 @@
         </div>
       </div>
 
+      <!-- AI 模式空输出区（占位，避免出现「全部被 is-hidden」时无选中 output-state） -->
+      <div id="empty-ai" class="output-state is-hidden min-h-[48px]" aria-hidden="true"></div>
+
       <!-- ---- AI 加载态 ---- -->
       <div id="loading-ai" class="output-state is-hidden">
         <div class="flex items-center justify-between mb-4">
@@ -934,16 +1182,14 @@
               <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
             </span>
             <span class="text-[13px] text-[#8a8a8a]">
-              生成中 · 预估 <span class="text-white font-medium" id="eta">28</span> 秒
+              生成中 · 预估剩余 <span class="text-white font-medium" id="eta">30</span> 秒（因分辨率而异）
             </span>
           </div>
-          <div class="text-[11.5px] text-[#5a5a5a] font-mono">
-            SeeDream v1.2 · 1024×1024 · CFG 8
+          <div class="text-[11.5px] text-[#5a5a5a] font-mono text-right max-w-[56%] leading-snug" id="loading-ai-meta">
+            火山方舟 · Seedream 4.5 · <span id="loading-output-spec" class="text-[#8a8a8a]">2K · 1:1</span> · n: 2
           </div>
         </div>
-        <div class="grid grid-cols-4 gap-4">
-          <div class="aspect-square rounded-2xl skeleton"></div>
-          <div class="aspect-square rounded-2xl skeleton"></div>
+        <div class="grid grid-cols-2 gap-4">
           <div class="aspect-square rounded-2xl skeleton"></div>
           <div class="aspect-square rounded-2xl skeleton"></div>
         </div>
@@ -956,9 +1202,11 @@
             <div class="text-[15px]">
               "<span id="ai-result-object" class="font-medium">咖啡杯</span>"
               <span class="text-[#5a5a5a] mx-1">·</span>
-              <span class="text-[#8a8a8a]">极简主义</span>
+              <span class="text-[#8a8a8a]"><span id="ai-result-color">主色</span> / <span id="ai-result-material">材质</span></span>
             </div>
-            <div class="text-[11.5px] text-[#5a5a5a] mt-0.5">耗时 26 秒 · 4 张候选</div>
+            <div class="text-[11.5px] text-[#5a5a5a] mt-0.5">
+              耗时 26 秒 · 2 张候选 · <span id="result-output-spec" class="font-mono text-[#8a8a8a]">2K · 1:1</span>
+            </div>
           </div>
           <div class="flex items-center gap-1.5">
             <button class="btn-ghost h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5">
@@ -974,7 +1222,7 @@
             </button>
             <button
               class="btn-primary h-8 px-3 rounded-lg text-[12.5px] inline-flex items-center gap-1.5"
-              onclick="showToast('已打包下载 4 张图标')"
+              onclick="showToast('已打包下载 2 张图标')"
             >
               <iconify-icon icon="lucide:download" class="text-[13px]"></iconify-icon>
               下载全部
@@ -982,7 +1230,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <div class="result-card">
             <div class="mock-icon mock-icon-1 aspect-square"><span class="relative z-10">☕</span></div>
             <div class="result-overlay">
@@ -999,34 +1247,17 @@
               <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
             </div>
           </div>
-          <div class="result-card">
-            <div class="mock-icon mock-icon-3 aspect-square"><span class="relative z-10">☕</span></div>
-            <div class="result-overlay">
-              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
-              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
-            </div>
-          </div>
-          <div class="result-card">
-            <div class="mock-icon mock-icon-4 aspect-square"><span class="relative z-10">☕</span></div>
-            <div class="result-overlay">
-              <button class="overlay-btn" title="下载该张" onclick="showToast('开始下载...')"><iconify-icon icon="lucide:download"></iconify-icon></button>
-              <button class="overlay-btn" title="复制图片到剪贴板" onclick="showToast('已复制图片到剪贴板')"><iconify-icon icon="lucide:copy"></iconify-icon></button>
-              <button class="overlay-btn" title="放大预览"><iconify-icon icon="lucide:maximize-2"></iconify-icon></button>
-            </div>
-          </div>
         </div>
 
-        <!-- 提示词 -->
+        <!-- 实际送模型文案（与上方预览一致） -->
         <div class="surface rounded-xl p-3.5 mt-4 flex items-start gap-3">
-          <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5"></iconify-icon>
+          <iconify-icon icon="lucide:sparkles" class="text-[14px] text-[#5a5a5a] mt-0.5 shrink-0"></iconify-icon>
           <div class="flex-1 min-w-0">
-            <div class="text-[11px] text-[#5a5a5a] mb-1 uppercase tracking-wider">使用的提示词</div>
-            <div class="text-[12.5px] text-[#a0a0a0] leading-relaxed font-mono">
-              A 3D rendered icon of <span class="text-white">coffee cup</span>,
-              isometric view, clean minimalist style, soft gradient lighting, pastel
-              color scheme, floating on solid background, studio quality, 4K.
-            </div>
+            <div class="text-[11px] text-[#5a5a5a] mb-2 uppercase tracking-wider">本次请求 · Positive / Negative</div>
+            <div class="text-[10px] text-[#6a6a6a] uppercase tracking-wider mb-1">Positive</div>
+            <div id="result-prompt-text" class="text-[12.5px] text-[#c8c8c8] leading-relaxed font-mono break-words whitespace-pre-wrap"></div>
+            <div class="text-[10px] text-[#6a6a6a] uppercase tracking-wider mb-1 mt-3">Negative</div>
+            <div id="result-negative-text" class="text-[12.5px] text-[#8a8a8a] leading-relaxed font-mono break-words whitespace-pre-wrap"></div>
           </div>
         </div>
       </div>
@@ -1299,6 +1530,46 @@
   <!-- Toast -->
   <div id="toast" class="toast">操作成功</div>
 
+  <!-- 与 prototype/assets/ai-3d-icon-style.json 同源；file:// 打开时 fetch 常失败，用作兜底 -->
+  <script id="ai-3d-icon-style-embed" type="application/json">
+{
+  "type": "3d_icon",
+  "vars": {
+    "object": "{生成物体}",
+    "color": "{主色调}",
+    "material": "{材质}"
+  },
+  "prompt": "生成一个单独的「{生成物体}」三维图标，精致3D图标风格，造型简洁圆润现代，主体居中，适合用于App、网页、可视化界面或设计系统。主体仅包含「{生成物体}」，不包含多余场景、文字、数字或说明信息。整体以「{主色调}」为主色，使用柔和渐变、轻微高光与细腻阴影，色彩干净明亮，具有高级感。主体材质为「{材质}」，需体现对应材质特征，如透明感、磨砂感、反光感、体积感与细腻表面质感。背景干净纯净，可为白底或透明底，允许轻微柔和投影。整体为高清细节渲染，C4D风格，Octane/Blender质感，柔和环境光，边缘圆润，商业级品质，具有Pinterest、Dribbble、Behance风格。",
+  "negative": "不要文字、数字、水印、人物、复杂场景、多物体堆叠、真实照片风格、低清晰度、脏污纹理、过度复杂细节"
+}
+  </script>
+
+  <script id="ai-3d-icon-presets-embed" type="application/json">
+{
+  "version": 1,
+  "colors": [
+    { "id": "cool-tech-blue", "label": "科技冷蓝", "phrase": "冷调科技蓝与浅灰白渐变，清透干净，偏中台与数据产品主色", "swatch": "#3b82f6" },
+    { "id": "viz-cyan-teal", "label": "大屏青绿", "phrase": "青绿到深青的电光渐变，适合数据大屏链路、指标高亮与状态流", "swatch": "#14b8a6" },
+    { "id": "command-indigo", "label": "指挥深蓝", "phrase": "深靛蓝与墨蓝递进，政企指挥舱、运维中台常用底色级强调", "swatch": "#4338ca" },
+    { "id": "mono-gray", "label": "极简黑白灰", "phrase": "高对比黑白与中性灰阶，无明显彩色倾向，适配暗色/浅色双主题", "swatch": "#a3a3a3" },
+    { "id": "slate-neutral", "label": "蓝灰中性", "phrase": "钢灰与浅钢蓝渐变，表格区、侧栏与标签页的企业后台中性色", "swatch": "#64748b" },
+    { "id": "hud-neon-cyan", "label": "暗底霓虹青", "phrase": "近黑底上以电光青作边缘光与高光线，HUD、驾驶舱式大屏点缀", "swatch": "#22d3ee" },
+    { "id": "ops-status-green", "label": "运行绿", "phrase": "低饱和松石绿配深墨绿阴影，适配正常可用、链路畅通类状态语义", "swatch": "#059669" },
+    { "id": "alert-amber", "label": "警示琥珀", "phrase": "克制琥珀橘与焦糖深棕，告警条、中风险档位与 KPI 预警信号色", "swatch": "#d97706" }
+  ],
+  "materials": [
+    { "id": "frosted-glass", "label": "磨砂玻璃", "phrase": "半透明磨砂玻璃，雾化折射与柔和高光，类似大屏卡片与浮层面板", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "brushed-steel", "label": "拉丝不锈钢", "phrase": "定向拉丝不锈钢，冷灰金属肌理与弱镜面反光，工业与机柜语境", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "anodized-aluminum", "label": "阳极铝金属", "phrase": "细拉丝阳极氧化铝，冷静微反光，数据中心与硬件产品审美", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "matte-plastic", "label": "哑光工程塑料", "phrase": "均匀哑光工程塑料涂层，漫反射无刺目高光，企业终端外壳质感", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "blast-titanium", "label": "钛灰喷砂金属", "phrase": "微孔喷砂钛灰金属，柔雾吸光无眩光镜面，适配暗底立体图标", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "dark-acrylic-panel", "label": "深色半透明亚克力", "phrase": "烟灰半透明亚克力镶边，内缘弱折射，叠压感类似驾驶舱层次面板", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "carbon-matte", "label": "碳纤维哑光", "phrase": "细密编织碳纤维纹理，深灰全哑光，科技硬件与车载 HMI 风格", "thumb": "./assets/material-placeholder.svg" },
+    { "id": "piano-gloss", "label": "钢琴黑高光", "phrase": "钢琴黑漆镜面高光与利落收边，高管看板、旗舰控制台级点缀质感", "thumb": "./assets/material-placeholder.svg" }
+  ]
+}
+  </script>
+
   <!-- ============================= -->
   <!-- 脚本                          -->
   <!-- ============================= -->
@@ -1319,34 +1590,265 @@
     const modeButtons = $$('#mode-seg button');
     // Hero 下的"当前功能说明"（AI / 匹配 文案不同，作为主层级辅助说明）
     const featureDesc = {
-      ai: '用一句话描述对象，AI 将为你生成 4 张 3D 风格的精美图标候选，支持多种风格与高级参数',
+      ai: '主色用预置色板 + 自定义词；材质用预置卡（当前统一占位图）+ 自定义词。物体、主色、材质的完整句子进 JSON 模板预览',
       match: '输入一组词语，AI 将从统一的开源图标库中匹配风格一致的图标集，批量生成可直接用于产品',
     };
 
-    // ============= AI 风格 → 中文标签 + 英文提示词片段 =============
-    // 未来对接 SeeDream 时，后端直接用 prompt 片段即可
-    const STYLE_MAP = {
-      minimal: {
-        label: '极简主义',
-        prompt: 'clean minimalist style, soft gradient lighting, pastel color scheme',
-      },
-      glass: {
-        label: '玻璃拟态',
-        prompt: 'glassmorphism, translucent glass surface, subtle refraction, frosted edges',
-      },
-      clay: {
-        label: '粘土风格',
-        prompt: 'claymorphic style, soft rounded forms, matte clay texture, playful colors',
-      },
-      cyber: {
-        label: '赛博朋克',
-        prompt: 'cyberpunk style, neon accents, vibrant magenta and cyan glow, futuristic vibe',
-      },
-      metal: {
-        label: '金属质感',
-        prompt: 'polished metal finish, brushed steel texture, reflective highlights',
-      },
-    };
+    /**
+     * 原型层：分辨率档位 + 图片比例两路选型；真正实现时在服务端转换为 Seedream 4.5 API 的 size / 比例等字段。
+     */
+    function getAiOutputSpec() {
+      const resEl = $('#select-resolution');
+      const ratioEl = $('#select-ratio');
+      const resolution = (resEl && resEl.value) || '2K';
+      const aspectRatio = (ratioEl && ratioEl.value) || '1:1';
+      const summary = `${resolution} · ${aspectRatio}`;
+      return { resolution, aspectRatio, summary };
+    }
+
+    function syncAiOutputLabels() {
+      const { summary } = getAiOutputSpec();
+      const loadSpan = $('#loading-output-spec');
+      const resSpan = $('#result-output-spec');
+      if (loadSpan) loadSpan.textContent = summary;
+      if (resSpan) resSpan.textContent = summary;
+    }
+
+    $('#select-resolution')?.addEventListener('change', syncAiOutputLabels);
+    $('#select-ratio')?.addEventListener('change', syncAiOutputLabels);
+    syncAiOutputLabels();
+
+    /** 自 assets / shared 加载；失败则使用页面内嵌 JSON */
+    let aiStyleConfig = null;
+    let styleFromHttp = false;
+    let iconPresetsConfig = null;
+    let presetsFromHttp = false;
+    let selectedColorId = null;
+    let selectedMaterialId = null;
+
+    function readEmbeddedAiStyle() {
+      const el = $('#ai-3d-icon-style-embed');
+      if (!el) return null;
+      try {
+        return JSON.parse(el.textContent.trim());
+      } catch (e) {
+        console.warn('[ai-3d-icon-style] embed parse failed', e);
+        return null;
+      }
+    }
+
+    async function loadAiStyleConfig() {
+      const candidates = ['./assets/ai-3d-icon-style.json', '../shared/config/ai-3d-icon-style.json'];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data?.prompt && data?.negative && data?.vars) {
+            aiStyleConfig = data;
+            styleFromHttp = true;
+            return;
+          }
+        } catch (_) { /* file:// 等 */ }
+      }
+      aiStyleConfig = readEmbeddedAiStyle();
+      styleFromHttp = false;
+    }
+
+    function readEmbeddedPresets() {
+      const el = $('#ai-3d-icon-presets-embed');
+      if (!el) return null;
+      try {
+        return JSON.parse(el.textContent.trim());
+      } catch (e) {
+        console.warn('[ai-3d-icon-presets] embed parse failed', e);
+        return null;
+      }
+    }
+
+    async function loadIconPresetsConfig() {
+      const candidates = ['./assets/ai-3d-icon-presets.json', '../shared/config/ai-3d-icon-presets.json'];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (!res.ok) continue;
+          const data = await res.json();
+          if (data?.colors?.length && data?.materials?.length) {
+            iconPresetsConfig = data;
+            presetsFromHttp = true;
+            return;
+          }
+        } catch (_) { /* file:// 等 */ }
+      }
+      iconPresetsConfig = readEmbeddedPresets();
+      presetsFromHttp = false;
+    }
+
+    function activeIconPresets() {
+      return iconPresetsConfig || readEmbeddedPresets();
+    }
+
+    function phraseForSelectedColor() {
+      const p = activeIconPresets();
+      if (!p?.colors?.length) return '';
+      const hit = p.colors.find((c) => c.id === selectedColorId);
+      return (hit || p.colors[0]).phrase;
+    }
+
+    function phraseForSelectedMaterial() {
+      const p = activeIconPresets();
+      if (!p?.materials?.length) return '';
+      const hit = p.materials.find((m) => m.id === selectedMaterialId);
+      return (hit || p.materials[0]).phrase;
+    }
+
+    function getEffectiveColorPhrase() {
+      const custom = ($('#var-color-custom')?.value ?? '').trim();
+      return custom || phraseForSelectedColor();
+    }
+
+    function getEffectiveMaterialPhrase() {
+      const custom = ($('#var-material-custom')?.value ?? '').trim();
+      return custom || phraseForSelectedMaterial();
+    }
+
+    function updateCustomOverrideUi() {
+      const ch = $('#color-palette-host');
+      const mh = $('#material-presets-host');
+      if (ch) ch.classList.toggle('presets-suppressed', Boolean(($('#var-color-custom')?.value ?? '').trim()));
+      if (mh) mh.classList.toggle('presets-suppressed', Boolean(($('#var-material-custom')?.value ?? '').trim()));
+    }
+
+    function updatePresetActiveClasses() {
+      $$('#color-palette-host .preset-swatch-btn').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-color-id') === selectedColorId);
+      });
+      $$('#material-presets-host .material-preset-card').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.getAttribute('data-material-id') === selectedMaterialId);
+      });
+    }
+
+    function renderPresetUis() {
+      const ch = $('#color-palette-host');
+      const mh = $('#material-presets-host');
+      const p = activeIconPresets();
+      if (!ch || !mh) return;
+      if (!p?.colors?.length || !p?.materials?.length) {
+        ch.innerHTML = '<span class="text-[12px] text-[#b45309]">预置色板/材质未加载，请检查 ai-3d-icon-presets.json</span>';
+        mh.innerHTML = '';
+        return;
+      }
+      if (!selectedColorId) selectedColorId = p.colors[0].id;
+      if (!selectedMaterialId) selectedMaterialId = p.materials[0].id;
+
+      ch.innerHTML = '';
+      p.colors.forEach((col) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'preset-swatch-btn';
+        b.setAttribute('data-color-id', col.id);
+        if (selectedColorId === col.id) b.classList.add('is-active');
+        b.title = `${col.label} · ${col.phrase}`;
+        b.setAttribute('aria-label', col.label);
+        b.style.backgroundColor = col.swatch;
+        ch.appendChild(b);
+      });
+
+      mh.innerHTML = '';
+      p.materials.forEach((mo) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'material-preset-card';
+        b.setAttribute('data-material-id', mo.id);
+        if (selectedMaterialId === mo.id) b.classList.add('is-active');
+        b.title = `${mo.label} · ${mo.phrase}`;
+        const img = document.createElement('img');
+        img.src = mo.thumb;
+        img.alt = '';
+        img.width = 96;
+        img.height = 96;
+        img.loading = 'lazy';
+        const span = document.createElement('span');
+        span.className = 'material-preset-label';
+        span.textContent = mo.label;
+        b.appendChild(img);
+        b.appendChild(span);
+        mh.appendChild(b);
+      });
+
+      updateCustomOverrideUi();
+      updatePresetActiveClasses();
+    }
+
+    function bindAiPresetsMountOnce() {
+      const mount = $('#ai-presets-mount');
+      if (!mount || mount.dataset.boundPresetClicks) return;
+      mount.dataset.boundPresetClicks = '1';
+      mount.addEventListener('click', (e) => {
+        const bc = e.target.closest('[data-color-id].preset-swatch-btn');
+        if (bc) {
+          selectedColorId = bc.getAttribute('data-color-id');
+          const ci = $('#var-color-custom');
+          if (ci) ci.value = '';
+          updateCustomOverrideUi();
+          updatePresetActiveClasses();
+          renderPromptPreview();
+          return;
+        }
+        const bm = e.target.closest('[data-material-id].material-preset-card');
+        if (bm) {
+          selectedMaterialId = bm.getAttribute('data-material-id');
+          const mi = $('#var-material-custom');
+          if (mi) mi.value = '';
+          updateCustomOverrideUi();
+          updatePresetActiveClasses();
+          renderPromptPreview();
+        }
+      });
+    }
+
+    function activeStyleConfig() {
+      return aiStyleConfig || readEmbeddedAiStyle();
+    }
+
+    function applyStyleVars(cfg, values) {
+      if (!cfg?.vars) return { prompt: '', negative: '' };
+      const tObj = cfg.vars.object;
+      const tCol = cfg.vars.color;
+      const tMat = cfg.vars.material;
+      const rep = {
+        [tObj]: values.object.trim() ? values.object.trim() : tObj,
+        [tCol]: values.color.trim() ? values.color.trim() : tCol,
+        [tMat]: values.material.trim() ? values.material.trim() : tMat,
+      };
+      let prompt = cfg.prompt;
+      let neg = cfg.negative;
+      Object.entries(rep).forEach(([tok, val]) => {
+        prompt = prompt.split(tok).join(val);
+        neg = neg.split(tok).join(val);
+      });
+      return { prompt, negative: neg };
+    }
+
+    function getVarValues() {
+      return {
+        object: ($('#var-object')?.value ?? ''),
+        color: getEffectiveColorPhrase(),
+        material: getEffectiveMaterialPhrase(),
+      };
+    }
+
+    function getFilledPrompts() {
+      return applyStyleVars(activeStyleConfig(), getVarValues());
+    }
+
+    function syncResultPromptBlocks() {
+      const { prompt, negative } = getFilledPrompts();
+      const rp = $('#result-prompt-text');
+      const rn = $('#result-negative-text');
+      if (rp) rp.textContent = prompt;
+      if (rn) rn.textContent = negative;
+    }
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, (c) => ({
@@ -1358,77 +1860,78 @@
       }[c]));
     }
 
-    // 根据：当前选中风格 + 输入框文本，渲染提示词预览
     function renderPromptPreview() {
-      const activeChip = $('#style-chips .chip.is-active');
-      const styleKey = activeChip?.dataset.style || 'minimal';
-      const cfg = STYLE_MAP[styleKey] || STYLE_MAP.minimal;
-      const input = $('#input-ai').value.trim();
+      const cfg = activeStyleConfig();
+      const presetOk = Boolean(activeIconPresets()?.colors?.length && activeIconPresets()?.materials?.length);
+      const st = $('#preview-config-status');
+      if (st) {
+        if (!cfg) {
+          st.textContent = '风格模板 JSON 缺失或损坏';
+        } else {
+          const partStyle = `${styleFromHttp ? '已从网络加载' : '内嵌兜底'} ai-3d-icon-style`;
+          const partPreset = presetOk
+            ? `${presetsFromHttp ? '已从网络加载' : '内嵌兜底'} ai-3d-icon-presets（材质图为占位）`
+            : 'ai-3d-icon-presets 不可用';
+          st.textContent = `${partStyle} · ${partPreset}`;
+        }
+      }
+      $('#preview-style-label').textContent = cfg?.type || '3d_icon';
 
-      $('#preview-style-label').textContent = cfg.label;
-
-      // 对象名称 token：有值 → 高亮；无值 → dashed 占位
-      const objectHtml = input
-        ? `<span class="prompt-object">${escapeHtml(input)}</span>`
-        : `<span class="prompt-object-placeholder">对象名称</span>`;
-
-      $('#preview-text').innerHTML =
-        `A 3D rendered icon of ${objectHtml}, isometric view, ` +
-        `${escapeHtml(cfg.prompt)}, floating on solid background, ` +
-        `studio quality, 4K.`;
+      const { prompt, negative } = cfg
+        ? applyStyleVars(cfg, getVarValues())
+        : { prompt: '(无配置)', negative: '' };
+      const pp = $('#preview-prompt');
+      const pn = $('#preview-negative');
+      if (pp) pp.textContent = prompt;
+      if (pn) pn.textContent = negative;
     }
 
-    // 复制按钮：把当前预览的纯文本写进剪贴板（用对象名称占位替换）
     function copyPromptPreview() {
-      const activeChip = $('#style-chips .chip.is-active');
-      const cfg = STYLE_MAP[activeChip?.dataset.style || 'minimal'];
-      const obj = $('#input-ai').value.trim() || '{object}';
-      const text =
-        `A 3D rendered icon of ${obj}, isometric view, ` +
-        `${cfg.prompt}, floating on solid background, studio quality, 4K.`;
-      // 优先走 Clipboard API，失败时降级 execCommand（防老浏览器）
+      const { prompt, negative } = getFilledPrompts();
+      const text = `[Positive]\n${prompt}\n\n[Negative]\n${negative}`;
       (navigator.clipboard?.writeText?.(text) ?? Promise.reject())
-        .then(() => showToast('已复制提示词'))
+        .then(() => showToast('已复制 Positive + Negative'))
         .catch(() => {
           const ta = document.createElement('textarea');
           ta.value = text;
           document.body.appendChild(ta);
           ta.select();
-          try { document.execCommand('copy'); showToast('已复制提示词'); }
-          catch { showToast('复制失败，请手动选择'); }
-          finally { document.body.removeChild(ta); }
+          try {
+            document.execCommand('copy');
+            showToast('已复制 Positive + Negative');
+          } catch {
+            showToast('复制失败，请手动选择');
+          } finally {
+            document.body.removeChild(ta);
+          }
         });
     }
     modeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         currentMode = btn.dataset.mode;
         modeButtons.forEach((b) => b.classList.toggle('is-active', b === btn));
-        // 切换 Hero 下的功能说明（带一个轻微的淡入过渡）
         const desc = $('#feature-desc');
         desc.style.opacity = '0';
         setTimeout(() => {
           desc.textContent = featureDesc[currentMode];
           desc.style.opacity = '1';
         }, 120);
-        // 输入区
-        $('#input-ai').classList.toggle('is-hidden', currentMode !== 'ai');
-        $('#input-match').classList.toggle('is-hidden', currentMode !== 'match');
-        // 参数区
+
+        $('#ai-input-panel').classList.toggle('is-hidden', currentMode !== 'ai');
+        $('#match-input-panel').classList.toggle('is-hidden', currentMode !== 'match');
+
         $('#params-ai').classList.toggle('is-hidden', currentMode !== 'ai');
         $('#params-match').classList.toggle('is-hidden', currentMode !== 'match');
-        // 按钮文案
+
         if (currentMode === 'ai') {
-          $('#submit-label').textContent = '生成 4 张';
+          $('#submit-label').textContent = '生成 2 张';
           $('#submit-icon').setAttribute('icon', 'lucide:sparkles');
         } else {
           $('#submit-label').textContent = '匹配图标';
           $('#submit-icon').setAttribute('icon', 'lucide:layers');
         }
-        // 输出区切换为对应空态（AI 模式已移除"试试这些"空态，此时会全部隐藏）
         switchOutput(`empty-${currentMode}`);
-        // 关闭高级面板
         $('#advanced-panel').classList.add('is-hidden');
-        // 提示词预览仅在 AI 模式下展示
         $('#prompt-preview').classList.toggle('is-hidden', currentMode !== 'ai');
       });
     });
@@ -1440,19 +1943,10 @@
       );
     }
 
-    // ============= AI 模式：风格 chip =============
-    $$('#style-chips .chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        $$('#style-chips .chip').forEach((c) => c.classList.remove('is-active'));
-        chip.classList.add('is-active');
-        renderPromptPreview(); // 切换风格 → 同步更新预览
-      });
-    });
-
     // 复制提示词按钮
     $('#preview-copy-btn').addEventListener('click', copyPromptPreview);
 
-    // 高级选项里的 chip（每组独立）
+    // 高级选项里的视角 chip
     $$('#advanced-panel > div').forEach((group) => {
       group.addEventListener('click', (e) => {
         const chip = e.target.closest('.chip');
@@ -1480,7 +1974,7 @@
       if (currentMode === 'ai') runAI();
       else runMatch();
     });
-    $('#input-ai').addEventListener('keydown', (e) => {
+    $('#var-object')?.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         runAI();
@@ -1495,11 +1989,20 @@
 
     // ============= AI 生成模拟 =============
     function runAI() {
-      const text = $('#input-ai').value.trim() || '咖啡杯';
-      $('#ai-result-object').textContent = text;
+      const vals = getVarValues();
+      const obj = vals.object.trim() || '咖啡杯';
+      $('#ai-result-object').textContent = obj;
+      $('#ai-result-color').textContent = vals.color.trim() || '{主色调}';
+      $('#ai-result-material').textContent = vals.material.trim() || '{材质}';
+      syncAiOutputLabels();
+      renderPromptPreview();
+      syncResultPromptBlocks();
       switchOutput('loading-ai');
 
-      let eta = 28;
+      const { resolution, aspectRatio } = getAiOutputSpec();
+      const resEta = { '1K': 24, '2K': 30, '4K': 48 };
+      let eta = resEta[resolution] ?? 30;
+      if (aspectRatio !== '1:1') eta += 4;
       $('#eta').textContent = eta;
       clearInterval(runAI._t);
       runAI._t = setInterval(() => {
@@ -1509,6 +2012,8 @@
 
       setTimeout(() => {
         clearInterval(runAI._t);
+        syncAiOutputLabels();
+        syncResultPromptBlocks();
         switchOutput('result-ai');
       }, 2400);
     }
@@ -1815,18 +2320,31 @@
     }
 
     // ============= 输入框自适应高度 =============
-    [$('#input-ai'), $('#input-match')].forEach((el) => {
+    [$('#var-object'), $('#input-match')].forEach((el) => {
+      if (!el) return;
       el.addEventListener('input', () => {
         el.style.height = 'auto';
         el.style.height = Math.min(el.scrollHeight, 200) + 'px';
       });
     });
-    // AI 输入框变化时，同步刷新提示词预览的对象名称部分
-    $('#input-ai').addEventListener('input', renderPromptPreview);
+
+    $('#var-object')?.addEventListener('input', renderPromptPreview);
+    $('#var-color-custom')?.addEventListener('input', () => {
+      updateCustomOverrideUi();
+      renderPromptPreview();
+    });
+    $('#var-material-custom')?.addEventListener('input', () => {
+      updateCustomOverrideUi();
+      renderPromptPreview();
+    });
 
     // ============= 初始化 =============
-    // 首次渲染提示词预览，保证页面加载即有内容
-    renderPromptPreview();
+    Promise.all([loadAiStyleConfig(), loadIconPresetsConfig()]).finally(() => {
+      syncAiOutputLabels();
+      renderPresetUis();
+      bindAiPresetsMountOnce();
+      renderPromptPreview();
+    });
   </script>
 </body>
 </html>

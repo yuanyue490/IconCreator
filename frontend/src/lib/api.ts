@@ -6,6 +6,13 @@ import type {
   AppSettings,
   MatchRequest,
   MatchResponse,
+  PromptSkillImageConfigResponse,
+  PromptSkillImageGenerateRequest,
+  PromptSkillImageGenerateResponse,
+  PromptSkillTestRequest,
+  PromptSkillTestResponse,
+  PromptSkillTurnRequest,
+  PromptSkillTurnResponse,
 } from "@iconcraft/shared";
 
 import { applySvgExportOptions } from "./svg-export";
@@ -51,6 +58,79 @@ export async function generateAiIcons(input: AiGenerateRequest) {
   }
 
   return (await response.json()) as AiGenerateResponse;
+}
+
+export async function testPromptSkill(input: PromptSkillTestRequest) {
+  const response = await fetch("/api/prompt-skills/test", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = (await response.json().catch(() => null)) as
+    | (Partial<PromptSkillTestResponse> & { message?: string })
+    | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? payload?.message ?? "需求处理失败，请稍后重试");
+  }
+
+  return payload as PromptSkillTestResponse;
+}
+
+export async function runPromptSkillTurn(input: PromptSkillTurnRequest) {
+  const response = await fetch("/api/prompt-skills/turn", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = (await response.json().catch(() => null)) as
+    | (Partial<PromptSkillTurnResponse> & { message?: string })
+    | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? payload?.message ?? "需求处理失败，请稍后重试");
+  }
+
+  return payload as PromptSkillTurnResponse;
+}
+
+export async function fetchPromptSkillImageConfig() {
+  const response = await fetch("/api/prompt-skills/image-config");
+  const payload = (await response.json().catch(() => null)) as
+    | (Partial<PromptSkillImageConfigResponse> & { message?: string })
+    | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.message ?? "图片生成服务状态获取失败");
+  }
+
+  return payload as PromptSkillImageConfigResponse;
+}
+
+export async function generatePromptSkillImages(input: PromptSkillImageGenerateRequest) {
+  const response = await fetch("/api/prompt-skills/generate-image", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  const payload = (await response.json().catch(() => null)) as
+    | (Partial<PromptSkillImageGenerateResponse> & { message?: string })
+    | null;
+
+  if (!response.ok) {
+    throw new Error(payload?.message ?? "GPT Image 2 图片生成失败");
+  }
+
+  return payload as PromptSkillImageGenerateResponse;
 }
 
 export async function fetchSvgText(library: string, style: string, name: string) {

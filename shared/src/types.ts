@@ -70,6 +70,8 @@ export interface AppSettings {
   exportIconSizePx: number;
   /** 单色：作用于 SVG 根 `color` 及 `currentColor` 链；与列表/弹窗里 Icon 预览一致 */
   exportIconColor: string;
+  /** 数字孪生图片生成使用的模型；为空时使用后端默认模型 */
+  digitalTwinImageModel: string;
 }
 
 export type AiImageResolution = "1K" | "2K" | "4K";
@@ -159,4 +161,128 @@ export interface MatchResponse {
 export interface IconCatalogEntry {
   name: string;
   aliases: string[];
+}
+
+export type PromptSkillStatus = "ready" | "needs_input";
+
+export type PromptSkillSessionStatus = "collecting" | "confirming" | "ready" | "generated";
+
+export type PromptSkillQuestionType = "single" | "multi" | "text";
+
+export interface PromptSkillQuestion {
+  field: string;
+  question: string;
+  type: PromptSkillQuestionType;
+  options?: string[];
+}
+
+export interface PromptSkillSlots {
+  sceneType?: string;
+  location?: string;
+  scope?: string;
+  visualStyles?: string[];
+  colorScheme?: string;
+  specialRequirements?: string;
+  targetTool?: string;
+}
+
+export interface PromptSkillChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface PromptSkillParsedResult {
+  status: PromptSkillStatus;
+  followUpQuestions: string[];
+  prompt: string;
+  keywords: string[];
+  variants: string[];
+  usageTips: string[];
+}
+
+export interface PromptSkillTestRequest {
+  skillMarkdown: string;
+  userInput: string;
+  llm?: Partial<AppSettings>;
+}
+
+export interface PromptSkillTestResponse {
+  ok: boolean;
+  parsed: PromptSkillParsedResult | null;
+  raw: string;
+  error: string | null;
+  meta: {
+    requestUrl: string | null;
+    model: string | null;
+    durationMs: number;
+    upstreamStatus: number | null;
+  };
+}
+
+export interface PromptSkillTurnRequest {
+  skillMarkdown: string;
+  userMessage: string;
+  session: {
+    status: PromptSkillSessionStatus;
+    slots: PromptSkillSlots;
+    messages: PromptSkillChatMessage[];
+  };
+  llm?: Partial<AppSettings>;
+}
+
+export interface PromptSkillTurnResponse {
+  ok: boolean;
+  status: PromptSkillSessionStatus;
+  assistantMessage: string;
+  slots: PromptSkillSlots;
+  missingFields: string[];
+  followUpQuestions: PromptSkillQuestion[];
+  prompt: string | null;
+  keywords: string[];
+  variants: string[];
+  usageTips: string[];
+  raw: string;
+  error: string | null;
+  meta: {
+    requestUrl: string | null;
+    model: string | null;
+    durationMs: number;
+    upstreamStatus: number | null;
+  };
+}
+
+export type PromptSkillImageModel = string;
+
+export type PromptSkillImageResponseFormat = "url" | "b64_json";
+
+export interface PromptSkillGeneratedImage {
+  id: string;
+  url: string | null;
+  b64Json: string | null;
+  revisedPrompt?: string | null;
+}
+
+export interface PromptSkillImageGenerateRequest {
+  prompt: string;
+  model?: PromptSkillImageModel;
+  responseFormat?: PromptSkillImageResponseFormat;
+}
+
+export interface PromptSkillImageGenerateResponse {
+  images: PromptSkillGeneratedImage[];
+  meta: {
+    model: string;
+    responseFormat: PromptSkillImageResponseFormat;
+    count: number;
+    durationMs: number;
+  };
+}
+
+export interface PromptSkillImageConfigResponse {
+  configured: boolean;
+  providerName: string;
+  model: string;
+  modelOptions: string[];
+  timeoutMs: number;
+  missing: string[];
 }

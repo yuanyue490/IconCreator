@@ -35,7 +35,7 @@ function getSourceMeta(item: MatchItem) {
       // 与 MatchHistorySection 汇总行里的「词典 N」同系视觉（单卡无数量，只写「词典」）
       return { label: "词典", className: "match-stat" };
     case "llm":
-      return { label: "LLM", className: "match-stat match-stat--llm" };
+      return { label: "智能", className: "match-stat match-stat--llm" };
     case "fallback":
       return { label: "兜底", className: "match-stat match-stat--fallback" };
     default:

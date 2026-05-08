@@ -27,16 +27,17 @@ IconCreator/
 ├── frontend/            # React + Vite + TS 前端工作台
 │   ├── .env.local       # 本地默认 LLM 配置（不入库）
 │   └── src/
-│       ├── components/  # 设置 / 结果网格 / 历史分组 / 图标详情
+│       ├── components/  # 设置 / 结果网格 / 历史分组 / 图标详情 / 数字孪生生成
 │       ├── lib/         # API 客户端与下载复制逻辑
 │       ├── pages/       # Workbench 主页面
+│       ├── prompts/     # 数字孪生提示词生成器默认 Markdown
 │       ├── stores/      # Zustand：设置、匹配历史（均支持 persist）
 │       └── styles/      # 全局样式
 │
 ├── backend/             # Node.js + Fastify + TS 后端
 │   ├── src/
-│   │   ├── routes/      # /api/match /api/icons
-│   │   └── services/    # catalog / LLM / match orchestration
+│   │   ├── routes/      # /api/match /api/icons /api/ai /api/prompt-skills
+│   │   └── services/    # catalog / LLM / match / AI image / prompt skill / gpt-image
 │
 ├── shared/              # 前后端共享类型、常量与配置
 │   ├── config/
@@ -56,9 +57,9 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**（**多套「提示词风格」Chip 切换**，持久化于 `localStorage`；生成历史条目标记所用风格名）、顶栏 **v0.5 Beta** 展示、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格（命中来源与汇总区统一为 `match-stat` 风格）、图标详情弹窗、设置弹窗、开发期请求反馈；**工作台「SVG 样式」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。全局 **`scrollbar-gutter: stable`**（及旧浏览器回退）减轻双模式切换时滚动条显隐带来的布局左右抖动。
-- `backend`：`/api/match` 匹配接口、`/api/ai/generate` AI 生图代理、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
-- `shared`：匹配与 AI 生成类型、图标库与风格配置、AI 3D prompt / preset 配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
+- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**（多套「提示词风格」Chip 切换，持久化于 `localStorage`；生成历史条目标记所用风格名）、**数字孪生模式**（多轮需求补充 / 摘要确认 / 提示词编辑 / 图片生成 / 全屏预览，默认规则位于 `frontend/src/prompts/digital-twin-skill.md`）、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格、图标详情弹窗、设置弹窗；**工作台「全局样式修改」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。全局 **`scrollbar-gutter: stable`**（及旧浏览器回退）减轻模式切换时滚动条显隐带来的布局左右抖动。
+- `backend`：`/api/match` 匹配接口、`/api/ai/generate` AI 生图代理、`/api/prompt-skills/test` 与 `/api/prompt-skills/turn` 数字孪生需求补充接口、`/api/prompt-skills/image-config` 图片模型配置自检、`/api/prompt-skills/generate-image` 数字孪生图片生成、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
+- `shared`：匹配与 AI 生成类型、数字孪生提示词 / 图片生成类型、图标库与风格配置、AI 3D prompt / preset 配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。
 - 多图标库切换：当前支持 `Lucide`、`Heroicons`、`Phosphor`、`Tabler` 的已接入风格组合。
 - LLM 配置：支持前端本地持久化 `baseURL`、`apiKey`、`model`、`systemPrompt`；也支持后端 `LLM_*` 环境变量兜底与 BYOK 共存。
@@ -75,7 +76,7 @@ IconCreator/
 | 服务端 | Node.js + Fastify |
 | 校验 | Zod |
 | 缓存 | 进程内 `Map` 缓存（MVP） |
-| AI 图像 | 火山方舟 Seedream 4.5 |
+| AI 图像 | 火山方舟 Seedream 4.5；数字孪生模式接入 API易 `gpt-image-2-all` |
 | AI 匹配 | OpenAI 兼容协议 |
 | 图标源 | Iconify API + 本地 JSON 索引 |
 
@@ -116,6 +117,12 @@ corepack pnpm catalog:names
 
 **线上若返回 `Route POST:/api/ai/generate not found`（Fastify 404）**：说明浏览器请求已到达 **Node 上的 Fastify**，但当前进程里没有注册该路由。请确认：(1) 已用**含** `backend/src/routes/ai.ts` 的代码构建并发布；(2) 启动入口为 **`node backend/dist/index.js`**（或平台将 `start` 设为 `pnpm --filter @iconcraft/backend start`），而不是只起了旧脚本或仅部署了静态前端；(3) CI/镜像中先执行 `pnpm --filter @iconcraft/shared build && pnpm --filter @iconcraft/backend build`。自检：GET `https://你的API域/api/health` 应返回含 `features.aiGenerate: true` 的 JSON。
 
+**数字孪生模式上线自检**：
+
+- `GET /api/health` 应返回 `features.promptSkillTest`、`features.promptSkillImageConfig`、`features.promptSkillImageGenerate`。
+- `GET /api/prompt-skills/image-config` 应返回 `configured: true`，并包含当前图片模型名。
+- 若生产前端通过 `vercel.json` rewrite 到独立 API 域，需要先确认该 API 域已经部署最新后端；否则前端会出现 404 或「图片生成服务状态获取失败」。
+
 ## LLM 密钥与部署（开发 / 生产切分）
 
 本项目支持「同一份代码、不同环境不同读法」，避免线上把密钥打进前端包。
@@ -129,6 +136,8 @@ corepack pnpm catalog:names
 
 - `LLM_BASE_URL` / `LLM_MODEL` / `LLM_API_KEY` / `LLM_SYSTEM_PROMPT`
 - AI 生图使用 `AI_IMAGE_BASE_URL` / `AI_IMAGE_MODEL` / `AI_IMAGE_API_KEY`，仅后端读取。
+- 数字孪生后续生图使用 `APIYI_IMAGE_BASE_URL` / `APIYI_IMAGE_MODEL` / `APIYI_IMAGE_API_KEY`，仅后端读取；若需要在前端开放图片模型切换，再配置 `APIYI_IMAGE_MODEL_OPTIONS`（逗号分隔，只放供应商确认可用的模型）。
+- 当前数字孪生模式默认跑 `APIYI_IMAGE_MODEL=gpt-image-2-all`；接口返回格式固定为 `url`，不向普通用户暴露 `url / b64_json`。
 - 前端不带 `apiKey` 时，后端会用这些值兜底；用户填了自己的 key 则以用户为准（BYOK 兼容）。
 - 后端启动时会自动读取当前目录 `.env`，并兼容从仓库根目录启动时读取 `backend/.env`。
 - 示例文件 `backend/.env.example`、`frontend/.env.example` 会入库，**不要填写真实密钥**；请复制为 `backend/.env` / `frontend/.env.local` 后再填真值。
@@ -138,6 +147,7 @@ corepack pnpm catalog:names
 - 生产构建的构建环境 **不要** 注入任何 `VITE_DEFAULT_LLM_*`（尤其 `API_KEY`）。
 - 服务端 `LLM_API_KEY` 通过部署平台的 secret / 环境变量下发，避免写入仓库或前端构建。
 - 服务端 `AI_IMAGE_API_KEY` 同样只放部署平台 secret 或本地 `backend/.env`，不要写入 `.env.example`。
+- 服务端 `APIYI_IMAGE_API_KEY` 同样只放部署平台 secret 或本地 `backend/.env`，不要写入 `.env.example`；上线前可访问 `/api/prompt-skills/image-config` 确认 `configured: true`。若密钥曾在沟通或日志中明文出现，发布前必须重新生成并轮换。
 - 发布前建议 `rg VITE_DEFAULT_LLM_API_KEY frontend/dist`（或你平台的产物目录），确认线上包内不含真实 key 字符串。
 
 ## 当前支持的图标库
@@ -153,7 +163,7 @@ corepack pnpm catalog:names
 
 ## 后续规划
 
-详见 [`docs/PROGRESS.md`](./docs/PROGRESS.md) 与 [`docs/PRD.md`](./docs/PRD.md)。核心方向包括：AI 生成接入、导出尺寸、catalog 扩充、`systemPrompt` 模块化、正式版前收敛调试能力、更多导出格式等。
+详见 [`docs/PROGRESS.md`](./docs/PROGRESS.md) 与 [`docs/PRD.md`](./docs/PRD.md)。核心方向包括：生产后端发布、图片结果持久化、catalog 扩充、`systemPrompt` 模块化、更多导出格式等。
 
 ## 资产授权说明
 

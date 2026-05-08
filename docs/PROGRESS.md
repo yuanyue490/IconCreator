@@ -1,8 +1,37 @@
 # 图标大厨（IconCraft）项目进度记录
 
-> **日期**：2026-04-30
-> **阶段**：正式开发推进 · AI 生成 · 匹配历史与工作台体验
-> **文档版本**：PRD v3.2 · Workspace MVP+
+> **日期**：2026-05-07
+> **阶段**：首版上线前收敛 · 数字孪生生成闭环 · 生产配置核查
+> **文档版本**：PRD v3.2 · Workspace MVP+ · Digital Twin Workflow
+
+---
+
+## 最新更新（2026-05-07）
+
+- **数字孪生模式收敛为首版上线形态**：工作台第三个模式从测试语义的「Skill协同」收敛为对外的 **「数字孪生」**；界面文案移除 `Prompt Skill Workflow`、`Skill Markdown`、`API Key / 环境变量`、`LLM`、`Beta` 等工程/测试表达，改为「提示词编辑」「智能匹配」「图片生成服务」等用户可理解文案。
+- **完整工作流闭环**：数字孪生模式形成 `多轮需求补充 -> 需求摘要 -> 提示词编辑 -> 图片生成 -> 放大预览` 闭环；用户既可以通过多轮对话生成提示词，也可以跳过对话，直接在提示词编辑器中输入内容后生成图片。
+- **提示词人工介入**：生成后的提示词不再直接锁死进入生图，而是先进入右侧提示词编辑器；用户可复制、恢复原始生成内容、手动微调，再点击生成图片，便于专业产品设计场景中的人工把关。
+- **图片生成接入 API易**：新增 `backend/src/services/gpt-image-service.ts`，按 OpenAI-compatible `/images/generations` 接入 API易 `gpt-image-2-all`；请求固定使用 `response_format: "url"`，不向普通用户暴露 `url / b64_json` 技术选项，也不单独暴露尺寸、数量、质量参数，比例与画幅要求写入提示词。
+- **图片模型配置自检**：新增 `GET /api/prompt-skills/image-config`，前端据此读取当前图片模型与可选模型列表；后端环境变量支持 `APIYI_IMAGE_MODEL`、`APIYI_IMAGE_MODEL_OPTIONS`、`APIYI_IMAGE_TIMEOUT_MS`。若只配置一个模型，前端只展示当前模型；若配置多个模型，前端显示下拉切换。
+- **图片生成错误提示补全**：后端对图片生成错误做分类处理：服务未配置、鉴权失败、额度不足、429、连接中断、超时、空图返回；前端新增页面内错误卡片，不再只依赖 toast。浏览器拿到图片 URL 但无法加载时，也会提示用户稍后重试。
+- **图片结果体验**：生成结果缩略图可点击全屏放大，支持点击背景、右上角关闭按钮和 `Esc` 关闭；生成结果区隐藏「变体与建议」原始 JSON，避免半成品功能干扰首版体验。
+- **生产部署核查**：本地 `/api/health` 已包含 `promptSkillImageConfig`、`promptSkillImageGenerate`；本地 `/api/prompt-skills/image-config` 返回 `configured: true`、`providerName: API易`、`model: gpt-image-2-all`。当前生产 API 域 `https://icon-api.zeroyue.com` 仍是旧后端，仅返回 `match / iconsSvg / aiGenerate`，且 `/api/prompt-skills/image-config` 为 404；上线数字孪生模式前必须先发布最新后端。
+- **密钥安全**：API Key 曾在开发对话中明文出现，生产发布前需要重新生成并轮换，只放部署平台 secret 或本地 `backend/.env`，不得进入前端构建产物或仓库文件。
+- **验证**：本轮变更已通过 `corepack pnpm --filter @iconcraft/shared build`、`corepack pnpm --filter @iconcraft/backend check`、`corepack pnpm --filter @iconcraft/frontend check`、`corepack pnpm build`。
+
+---
+
+## 最新更新（2026-05-06）
+
+- **Skill 协同实验入口**：工作台新增第三个模式 **「Skill协同」**，用于验证「Markdown Skill + MiniMax」的多轮提示词生成工作流；入口与 `AI 生成`、`SVG匹配` 并列，不影响既有 AI 图标生成与 SVG 匹配链路。
+- **后端 · Prompt Skill API**：新增 `POST /api/prompt-skills/test` 与 `POST /api/prompt-skills/turn`；服务层 `prompt-skill-service.ts` 复用现有 OpenAI-compatible `/chat/completions` 调用方式，把 Skill Markdown、会话状态、用户输入组装给 MiniMax，并要求模型返回结构化 JSON。
+- **多轮会话协议**：共享类型新增 `PromptSkillSlots`、`PromptSkillQuestion`、`PromptSkillTurnRequest`、`PromptSkillTurnResponse` 等；模型每轮返回 `slots`、`missingFields`、`followUpQuestions`、`assistantMessage`、`prompt`、`variants`、`usageTips`，前端据此驱动需求澄清、摘要确认与最终生成。
+- **前端 · 多轮体验**：`SkillLabSection` 从单次测试窗升级为对话式工作流：左侧展示需求输入与系统反馈，右侧展示需求摘要、生成结果和变体建议；信息足够后在对话尾部展示 **「确认生成提示词」**，点击即发送确认。
+- **追问表单稳定性**：模型返回的 `followUpQuestions` 直接渲染在对话框中；用户可先选择多个选项，选择 **自定义 / 其他** 时出现自定义输入框，最后点击 **「确认并发送补充信息」** 才一次性提交，避免点选项即自动发送造成中断。
+- **默认 Skill 文档化**：默认数字孪生 Skill 从前端 TS 字符串迁移到 `frontend/src/prompts/digital-twin-skill.md`，并通过 `?raw` 导入；后续调整默认 Skill 只需维护该 Markdown。文档已补充网站多轮追问语义、生成前需求摘要确认规则，并明确面向 **GPT Image 2** 的提示词场景，不追加 negative prompt。
+- **数字孪生 Skill 内容优化**：扩展智慧城市、交通、应急、园区、工业、能源、水利、机房、农业、物流、双碳等场景关键词；弱化不适合项目的纯赛博 / 电影海报倾向，强调 B 端大屏、GIS、业务指标、空间层次与可落地产品视觉。
+- **复制体验修复**：`Skill协同` 生成结果旁的复制按钮改为优先 `navigator.clipboard.writeText`，失败时回退到临时 `textarea + execCommand("copy")`，降低浏览器权限或安全上下文导致的复制失败。
+- **验证**：本轮变更已通过 `corepack pnpm -r check`、`corepack pnpm -r build`；局部前端修改也通过 `corepack pnpm --filter @iconcraft/frontend check/build`。
 
 ---
 
@@ -251,20 +280,27 @@ f:/VibeCoding/IconCreator/
 ### 4.1 近期优先项
 
 - [x] 把 AI 生成结果正式接入工作台，补齐生成态结果卡片、预览与基础操作
-- [ ] 为生成 / 导出链路加入尺寸调节能力，明确预设尺寸、滑杆交互与下载尺寸联动
+- [x] 数字孪生模式形成多轮需求补充、提示词编辑、直接提示词生图、图片放大预览的首版闭环
+- [x] 数字孪生图片生成接入 API易 `gpt-image-2-all`，并通过后端环境变量读取密钥
+- [x] 首版上线前隐藏半成品「变体与建议」JSON，并收敛对外工程/测试文案
+- [ ] 发布最新生产后端，确保线上 `/api/health` 含 `promptSkillImageConfig` / `promptSkillImageGenerate`
+- [ ] 发布前轮换已在沟通中出现过的图片模型 API Key
+- [ ] 评估生成图片 URL 是否会过期；若会过期，补服务端转存与结果持久化
 - [ ] 扩充多图标库 catalog，提升 Heroicons / Phosphor / Tabler 的覆盖率
 - [ ] 把 `systemPrompt` 拆成可组合策略块，降低手工改整段 prompt 的成本
-- [ ] 正式版发布前移除请求调试面板，仅保留必要日志与错误提示
+- [x] 正式版发布前移除/隐藏数字孪生模式中的测试阶段工程文案，仅保留必要错误提示
 - [ ] 在已支持 SVG ZIP 的基础上，继续补齐 Sprite / React / Vue / PNG ZIP 导出
-- [ ] 区分“开发态文案”与“正式发布文案”，减少工具说明暴露给终端用户
+- [ ] 为生成 / 导出链路加入尺寸调节能力，明确预设尺寸、滑杆交互与下载尺寸联动
 
 ### 4.2 功能增强待办
 
 - [x] AI 生成支持多套 Positive/Negative 模板切换（样式表 JSON + persist + 历史记录风格字段）
 - [x] AI 3D 生成功能从原型迁移到正式工程，并与当前工作台双模式切换打通
+- [x] 数字孪生模式支持不走多轮对话、直接输入提示词生成图片
 - [ ] 浏览模式 `/browse` 的正式页面与单图导出能力
 - [x] 历史记录与最近匹配组持久化（`match-history-store`，最多 10 组）
-- [ ] 更完整的输入校验反馈与错误恢复交互
+- [x] 数字孪生图片生成错误提示覆盖服务未配置、鉴权失败、额度不足、限流、超时、空图、图片无法加载
+- [ ] SVG 匹配与 AI 3D 图标生成补更完整的输入校验反馈与错误恢复交互
 - [ ] 为关键词扩展链路增加可观测性与命中质量回看
 - [ ] 移动端与窄屏适配
 
@@ -272,7 +308,8 @@ f:/VibeCoding/IconCreator/
 
 - [ ] Redis 或更稳妥的缓存层替换当前进程内缓存
 - [ ] 基础日志、错误采样与匹配成功率统计
-- [ ] 部署方案与环境变量规范
+- [x] 数字孪生图片生成环境变量规范：`APIYI_IMAGE_BASE_URL` / `APIYI_IMAGE_MODEL` / `APIYI_IMAGE_MODEL_OPTIONS` / `APIYI_IMAGE_TIMEOUT_MS` / `APIYI_IMAGE_API_KEY`
+- [ ] 生产 API 域发布最新后端，并复核 Vercel rewrite 指向的 API 版本
 - [ ] CI 中加入自动 `check` / `build`
 
 ### 4.4 待定问题
@@ -281,6 +318,7 @@ f:/VibeCoding/IconCreator/
 - [ ] **Logo 设计**：当前是简单字标 `[厨]`，需要正式设计
 - [ ] **域名选型**
 - [x] **Seedream 4.5 API 接入方式**：当前按火山方舟 OpenAI 兼容 `/images/generations` 接入，密钥仅后端读取
+- [x] **数字孪生图片模型接入方式**：当前通过 API易 OpenAI 兼容 `/images/generations` 接入 `gpt-image-2-all`，密钥仅后端读取，前端通过 `/api/prompt-skills/image-config` 读取当前模型
 - [ ] **AI 匹配的 LLM 选型**：GPT-4o-mini / DeepSeek / Kimi 的具体基准测试
 - [ ] **免费额度策略**：匿名用户每日限多少次生成 / 匹配
 - [ ] **图标库许可证显示方式**：批量下载包是否自动附带 LICENSE
@@ -347,5 +385,5 @@ f:/VibeCoding/IconCreator/
 
 ---
 
-**最后更新**：2026-04-30
+**最后更新**：2026-05-07
 **维护者**：产品 + 开发

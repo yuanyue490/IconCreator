@@ -127,7 +127,7 @@ export function AiGenerateSection({
   }
 
   async function handleCopyPrompt() {
-    const text = `[Positive]\n${filledPrompts.prompt}\n\n[Negative]\n${filledPrompts.negativePrompt}`;
+    const text = `主体提示词\n${filledPrompts.prompt}\n\n规避内容\n${filledPrompts.negativePrompt}`;
     await navigator.clipboard.writeText(text);
     onToast("已复制提示词");
   }
@@ -157,7 +157,7 @@ export function AiGenerateSection({
         <div className="ai-generate__header">
           <div>
             <div className="ai-generate__eyebrow">AI 3D 图标生成</div>
-            <h2 className="ai-generate__title">把一个业务对象变成 2 张可选图标（效果测试中）</h2>
+            <h2 className="ai-generate__title">把一个业务对象变成 2 张可选图标</h2>
           </div>
           <button
             className="btn-subtle inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[12.5px]"
@@ -314,21 +314,21 @@ export function AiGenerateSection({
             onClick={() => setPromptPreviewOpen((open) => !open)}
             type="button"
           >
-            <span>
-              <span className="ai-field__label">提示词预览</span>
-              <span className="ai-prompt-preview__hint">生成前可展开检查最终 Positive / Negative</span>
-            </span>
+              <span>
+                <span className="ai-field__label">提示词预览</span>
+                <span className="ai-prompt-preview__hint">生成前可展开检查最终提示词</span>
+              </span>
             <Icon icon={promptPreviewOpen ? "lucide:chevron-up" : "lucide:chevron-down"} width="16" />
           </button>
 
           {promptPreviewOpen ? (
             <div className="ai-prompt-preview__body">
               <div>
-                <div className="ai-prompt-preview__label">Positive</div>
+                <div className="ai-prompt-preview__label">主体提示词</div>
                 <pre>{filledPrompts.prompt}</pre>
               </div>
               <div>
-                <div className="ai-prompt-preview__label">Negative</div>
+                <div className="ai-prompt-preview__label">规避内容</div>
                 <pre>{filledPrompts.negativePrompt}</pre>
               </div>
             </div>
@@ -348,7 +348,7 @@ export function AiGenerateSection({
               </div>
               <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
                 <Icon icon="lucide:loader-circle" width="15" />
-                正在请求模型
+                正在生成图像
               </div>
             </div>
             <div className="ai-result-grid">

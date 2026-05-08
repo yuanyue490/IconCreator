@@ -50,7 +50,7 @@ export function AiHistorySection({ session, onDelete, onToast }: AiHistorySectio
   const [exporting, setExporting] = useState(false);
 
   async function handleCopyPrompt() {
-    const text = `[Positive]\n${session.prompt}\n\n[Negative]\n${session.negativePrompt}`;
+    const text = `主体提示词\n${session.prompt}\n\n规避内容\n${session.negativePrompt}`;
     await navigator.clipboard.writeText(text);
     onToast("已复制提示词");
   }

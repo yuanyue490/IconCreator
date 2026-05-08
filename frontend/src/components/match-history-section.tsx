@@ -43,7 +43,7 @@ function buildCompactStats(summary: ReturnType<typeof buildSourceSummary>) {
     stats.push({ key: "catalog", label: `词典 ${summary.catalog}` });
   }
   if (summary.llm > 0) {
-    stats.push({ key: "llm", label: `LLM ${summary.llm}`, tone: "llm" });
+    stats.push({ key: "llm", label: `智能 ${summary.llm}`, tone: "llm" });
   }
   if (summary.fallback > 0) {
     stats.push({ key: "fallback", label: `兜底 ${summary.fallback}`, tone: "fallback" });
@@ -56,21 +56,15 @@ function buildCompactStats(summary: ReturnType<typeof buildSourceSummary>) {
 }
 
 function buildPipelineLabel(session: MatchHistorySession) {
-  return session.meta.usedLlm ? "词典 + LLM" : "仅词典";
+  return session.meta.usedLlm ? "词典 + 智能匹配" : "仅词典";
 }
 
 function buildFeedbackText(session: MatchHistorySession) {
-  const modelName = session.meta.llmModel?.trim() || "未识别模型";
-
-  if (!session.meta.llmAttempted) {
+  if (!session.meta.llmAttempted || session.meta.llmSuccess) {
     return "";
   }
 
-  if (session.meta.llmSuccess) {
-    return `反馈：语义匹配请求成功（模型：${modelName}）。`;
-  }
-
-  return `反馈：语义匹配请求未成功（模型：${modelName}，${session.meta.llmError ?? "未知原因"}）。`;
+  return "智能语义匹配暂未完成，已使用本地匹配结果。";
 }
 
 function formatTimestamp(timestamp: number) {
@@ -126,7 +120,7 @@ export function MatchHistorySection({
             <span className="info-tooltip" tabIndex={0} role="button" aria-label="查看匹配流程说明">
               <Icon icon="lucide:circle-help" width="13" />
               <span className="info-tooltip__bubble">
-                处理顺序：先查本地词典；词典未命中且已配置模型时，再交给 LLM 做语义匹配；若模型结果不存在或不可信，再走本地兜底；仍然失败则标记为未匹配，不会强行硬猜。
+                处理顺序：先查本地词典；词典未命中且已启用智能匹配时，再做语义匹配；若结果不存在或不可信，再走本地兜底；仍然失败则标记为未匹配，不会强行硬猜。
               </span>
             </span>
           </div>

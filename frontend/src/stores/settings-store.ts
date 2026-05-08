@@ -33,6 +33,7 @@ function buildDefaultSettings(): AppSettings {
       import.meta.env.VITE_DEFAULT_LLM_SYSTEM_PROMPT?.trim() || DEFAULT_SYSTEM_PROMPT,
     exportIconSizePx: 24,
     exportIconColor: "#fafafa",
+    digitalTwinImageModel: "",
   };
 }
 
@@ -60,14 +61,23 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "iconcraft-settings",
-      version: 6,
-      partialize: ({ baseURL, apiKey, model, systemPrompt, exportIconSizePx, exportIconColor }) => ({
+      version: 7,
+      partialize: ({
         baseURL,
         apiKey,
         model,
         systemPrompt,
         exportIconSizePx,
         exportIconColor,
+        digitalTwinImageModel,
+      }) => ({
+        baseURL,
+        apiKey,
+        model,
+        systemPrompt,
+        exportIconSizePx,
+        exportIconColor,
+        digitalTwinImageModel,
       }),
       migrate: (persistedState) => {
         const persisted = (persistedState ?? {}) as Partial<AppSettings>;
@@ -95,6 +105,8 @@ export const useSettingsStore = create<SettingsState>()(
           systemPrompt: persisted.systemPrompt?.trim() || defaultSettings.systemPrompt,
           exportIconSizePx: size,
           exportIconColor: color,
+          digitalTwinImageModel:
+            persisted.digitalTwinImageModel?.trim() || defaultSettings.digitalTwinImageModel,
         };
       },
     },

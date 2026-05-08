@@ -16,6 +16,7 @@ import { MatchHistorySection } from "../components/match-history-section";
 import { IconDetailDialog } from "../components/icon-detail-dialog";
 import { MatchResultGrid } from "../components/match-result-grid";
 import { SettingsDialog } from "../components/settings-dialog";
+import { SkillLabSection } from "../components/skill-lab-section";
 import { EXPORT_SIZE_PRESETS, isPresetSize } from "../lib/export-appearance";
 import { downloadSvgBundle, matchWords } from "../lib/api";
 import type { MatchHistorySession } from "../stores/match-history-store";
@@ -38,7 +39,7 @@ type ToastState = {
 };
 
 export function WorkbenchPage() {
-  const [mode, setMode] = useState<"ai" | "match">("ai");
+  const [mode, setMode] = useState<"ai" | "match" | "skill">("ai");
   const [matchInput, setMatchInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedLibrary, setSelectedLibrary] = useState<IconLibraryId>(DEFAULT_MATCH_LIBRARY);
@@ -71,7 +72,9 @@ export function WorkbenchPage() {
   const featureDescription =
     mode === "ai"
       ? "输入一个业务对象，选择适合大屏和 B 端项目的主色与材质，生成 2 张原创 3D 图标候选。"
-      : "输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。";
+      : mode === "skill"
+        ? "通过多轮对话完成提示词生成与效果图生成。"
+        : "输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。";
 
   useEffect(() => {
     return () => {
@@ -242,7 +245,6 @@ export function WorkbenchPage() {
             厨
           </div>
           <div className="text-sm font-semibold">图标大厨</div>
-          <div className="text-[11px] text-[#5a5a5a]">v0.5 Beta</div>
         </div>
 
         <div className="flex items-center gap-1">
@@ -251,7 +253,7 @@ export function WorkbenchPage() {
             onClick={() => setSettingsOpen(true)}
           >
             <Icon icon="lucide:settings-2" width="14" />
-            配置
+            设置
           </button>
         </div>
       </header>
@@ -282,6 +284,13 @@ export function WorkbenchPage() {
                 <Icon icon="lucide:globe" width="15" />
                 SVG匹配
               </button>
+              <button
+                className={mode === "skill" ? "is-active" : ""}
+                onClick={() => setMode("skill")}
+              >
+                <Icon icon="lucide:wand-sparkles" width="15" />
+                数字孪生
+              </button>
             </div>
           </div>
 
@@ -292,6 +301,8 @@ export function WorkbenchPage() {
 
         {mode === "ai" ? (
           <AiGenerateSection onToast={showToast} />
+        ) : mode === "skill" ? (
+          <SkillLabSection onToast={showToast} />
         ) : (
           <>
             <BorderBeam size="md" colorVariant="ocean" duration={4} strength={0.3}>

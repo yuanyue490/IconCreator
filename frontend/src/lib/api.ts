@@ -74,7 +74,7 @@ export async function testPromptSkill(input: PromptSkillTestRequest) {
     | null;
 
   if (!response.ok) {
-    throw new Error(payload?.error ?? payload?.message ?? "需求处理失败，请稍后重试");
+    throw new Error(payload?.message ?? payload?.error ?? "需求处理失败，请稍后重试");
   }
 
   return payload as PromptSkillTestResponse;

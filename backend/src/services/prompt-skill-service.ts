@@ -177,7 +177,7 @@ async function requestCompletion(input: {
     return {
       ok: false as const,
       raw: "",
-      error: "LLM config missing: baseURL or model is empty.",
+      error: "需求生成服务暂未配置，请联系管理员处理。",
       meta: {
         requestUrl,
         model: resolved.model || null,
@@ -209,7 +209,7 @@ async function requestCompletion(input: {
       return {
         ok: false as const,
         raw: body,
-        error: `Prompt skill request failed with ${response.status}`,
+        error: `需求生成服务返回异常，请稍后重试。`,
         meta: {
           requestUrl,
           model: resolved.model,
@@ -238,7 +238,7 @@ async function requestCompletion(input: {
     return {
       ok: false as const,
       raw: "",
-      error: error instanceof Error ? error.message : "Unknown prompt skill error",
+      error: error instanceof Error ? error.message : "需求生成服务连接失败，请稍后重试。",
       meta: {
         requestUrl,
         model: resolved.model || null,

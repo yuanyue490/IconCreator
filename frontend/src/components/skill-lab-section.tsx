@@ -98,8 +98,8 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
   const settings = useSettingsStore();
 
   const canSubmit = useMemo(
-    () => Boolean(skillMarkdown.trim() && input.trim() && settings.baseURL.trim() && settings.model.trim()),
-    [input, settings.baseURL, settings.model, skillMarkdown],
+    () => Boolean(skillMarkdown.trim() && input.trim()),
+    [input, skillMarkdown],
   );
 
   useEffect(() => {
@@ -149,8 +149,8 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
   async function submitTurn(message: string) {
     const content = message.trim();
     if (!content) return;
-    if (!skillMarkdown.trim() || !settings.baseURL.trim() || !settings.model.trim()) {
-      onToast("请先完成模型设置");
+    if (!skillMarkdown.trim()) {
+      onToast("需求生成服务暂未就绪，请稍后重试");
       return;
     }
 

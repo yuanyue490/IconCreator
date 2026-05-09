@@ -285,4 +285,5 @@ export interface PromptSkillImageConfigResponse {
   modelOptions: string[];
   timeoutMs: number;
   missing: string[];
+  warning?: string;
 }

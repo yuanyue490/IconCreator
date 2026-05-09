@@ -371,6 +371,22 @@ f:/VibeCoding/IconCreator/
   - 优点：符合"开箱即用"定位，老用户直接上手
   - 缺点：新用户缺少引导，需要靠示例卡片补偿
 
+### ADR-006：AI 生成、SVG 匹配、数字孪生按独立模块开发
+
+- **日期**：2026-05-09
+- **背景**：数字孪生工作流接入时曾触及共享 LLM / API 代码，导致 SVG 匹配的 LLM 辅助链路出现回归。虽然三个模块可能使用同一个大模型服务或 OpenAI-compatible 接入，但产品功能、状态管理、错误恢复和默认参数不应互相耦合。
+- **决策**：
+  - `AI 生成`、`SVG 匹配`、`数字孪生` 视为三个独立模块。
+  - 共用 API Provider、API Key 或 `LLM_*` 环境变量，不等于可以共改业务链路。
+  - 数字孪生变更默认限定在 `prompt-skills`、`gpt-image`、`digital-twin-skill.md` 与对应前端组件内。
+  - SVG 匹配链路默认保持 `本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`，除非任务明确要求调整该模块。
+  - 若必须修改共享文件，例如 `backend/src/services/llm-client.ts`、`frontend/src/lib/api.ts`、`shared/src/types.ts`，先说明影响范围，再做跨模块回归。
+- **最低回归要求**：
+  - `AI 生成`：确认 `/api/ai/generate` 配置读取与前端生成入口不受影响。
+  - `SVG 匹配`：确认本地词典命中、LLM 语义匹配、LLM 关键词扩展、未匹配兜底、SVG 代理均可用。
+  - `数字孪生`：确认 `/api/prompt-skills/turn`、提示词编辑、`/api/prompt-skills/image-config`、`/api/prompt-skills/generate-image` 均可用。
+- **后果**：开发会多一步影响面判断和回归检查，但可以避免新功能上线前破坏旧的 SVG 匹配能力。
+
 ---
 
 ## 七、下次启动时的切入点
@@ -385,5 +401,5 @@ f:/VibeCoding/IconCreator/
 
 ---
 
-**最后更新**：2026-05-07
+**最后更新**：2026-05-09
 **维护者**：产品 + 开发

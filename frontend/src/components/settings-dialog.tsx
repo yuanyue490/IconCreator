@@ -12,6 +12,16 @@ interface SettingsDialogProps {
   onClose: () => void;
 }
 
+function cleanImageModelName(value: string | undefined) {
+  return (
+    value
+      ?.replace(/\\n|\\r/g, "\n")
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .find((item) => item && !item.includes("=") && !item.includes("_API_KEY")) ?? ""
+  );
+}
+
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const {
     baseURL,
@@ -41,7 +51,10 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         if (ignore) return;
         setImageConfig(config);
         if (!digitalTwinImageModel && config.configured) {
-          setField("digitalTwinImageModel", config.modelOptions[0] || config.model);
+          setField(
+            "digitalTwinImageModel",
+            cleanImageModelName(config.modelOptions[0]) || cleanImageModelName(config.model),
+          );
         }
       } catch (error) {
         if (ignore) return;
@@ -66,13 +79,19 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const safeExportColor = /^#[0-9a-fA-F]{6}$/.test(exportIconColor)
     ? exportIconColor
     : "#fafafa";
-  const digitalTwinModelValue =
-    digitalTwinImageModel || imageConfig?.modelOptions[0] || imageConfig?.model || "";
-  const digitalTwinModelOptions = imageConfig?.modelOptions.length
-    ? imageConfig.modelOptions
+  const configModelOptions = [...new Set((imageConfig?.modelOptions ?? []).map(cleanImageModelName).filter(Boolean))];
+  const configModel = cleanImageModelName(imageConfig?.model);
+  const digitalTwinModelValue = digitalTwinImageModel || configModelOptions[0] || configModel || "";
+  const digitalTwinModelOptions = configModelOptions.length
+    ? configModelOptions
     : digitalTwinModelValue
       ? [digitalTwinModelValue]
       : [];
+  const imageConfigWarning =
+    imageConfig?.warning ||
+    ((imageConfig?.model && !configModel) || (imageConfig?.modelOptions ?? []).some((item) => !cleanImageModelName(item))
+      ? "图片模型配置格式异常，请检查服务端环境变量。"
+      : "");
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -236,6 +255,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               <div className="mt-2 text-xs leading-5 text-[#6f6f6f]">
                 {imageConfigError
                   ? imageConfigError
+                  : imageConfigWarning
+                    ? imageConfigWarning
                   : imageConfig?.configured
                     ? "模型列表由服务端配置。只有配置了多个可用模型时，这里才会出现可切换选项。"
                     : "图片生成服务暂未就绪，请联系管理员处理。"}

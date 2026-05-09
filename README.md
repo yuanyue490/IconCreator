@@ -65,6 +65,15 @@ IconCreator/
 - LLM 配置：支持前端本地持久化 `baseURL`、`apiKey`、`model`、`systemPrompt`；也支持后端 `LLM_*` 环境变量兜底与 BYOK 共存。
 - **UI 与层级**：全屏弹窗（`.dialog-backdrop` / `.dialog-panel`）使用较高 `z-index`，保证盖过输入区 `border-beam` 等装饰层；详情弹窗内 SVG 源码区为预格式化换行，避免横向撑出滚动条（见 `docs/DESIGN.md` 附录）。
 
+## 模块边界约定
+
+`AI 生成`、`SVG 匹配`、`数字孪生` 是三个独立功能模块。它们可以复用同一套 OpenAI-compatible API、LLM 配置入口或后端基础客户端，但业务流程、前端状态、错误恢复和默认参数必须彼此隔离。
+
+- 开发 `数字孪生` 时，默认只改 `prompt-skills`、`gpt-image`、`digital-twin-skill.md` 与对应前端组件；不得顺手改动 SVG 匹配链路。
+- 开发 `SVG 匹配` 时，保持既有链路 `本地词典 -> LLM 语义匹配 -> LLM 关键词扩展 -> 本地兜底` 的行为稳定，除非任务明确要求调整。
+- 开发 `AI 生成` 时，Seedream 图标生成配置与数字孪生后续生图配置分开维护，不把图片模型选项混进 SVG 或数字孪生以外的界面。
+- 如果必须修改共享文件（例如 `backend/src/services/llm-client.ts`、`frontend/src/lib/api.ts`、`shared/src/types.ts`），需要先确认影响范围，并至少回归对应模块的核心请求路径。
+
 ## 技术栈（当前实现）
 
 | 层 | 选型 |

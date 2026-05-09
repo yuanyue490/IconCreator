@@ -46,6 +46,14 @@ function parseModelOptions(value: string, fallback: string) {
   return [...new Set([fallback, ...options])];
 }
 
+function sanitizeImageModelName(value: string) {
+  return value
+    .replace(/\\n|\\r/g, "\n")
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .find((item) => item && !item.includes("=") && !item.includes("_API_KEY")) ?? "";
+}
+
 function parseTimeoutMs(value: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 10000) {
@@ -59,15 +67,18 @@ function resolveGptImageConfig() {
     pickEnv("APIYI_IMAGE_BASE_URL", "GPT_IMAGE_BASE_URL", "N1N_IMAGE_BASE_URL") ||
     DEFAULT_GPT_IMAGE_BASE_URL;
   const apiKey = pickEnv("APIYI_IMAGE_API_KEY", "GPT_IMAGE_API_KEY", "N1N_IMAGE_API_KEY");
-  const model =
+  const rawModel =
     pickEnv("APIYI_IMAGE_MODEL", "GPT_IMAGE_MODEL", "N1N_IMAGE_MODEL") || DEFAULT_GPT_IMAGE_MODEL;
+  const model = sanitizeImageModelName(rawModel) || DEFAULT_GPT_IMAGE_MODEL;
   const providerName =
     pickEnv("APIYI_IMAGE_PROVIDER_NAME", "GPT_IMAGE_PROVIDER_NAME", "N1N_IMAGE_PROVIDER_NAME") ||
     DEFAULT_GPT_IMAGE_PROVIDER_NAME;
   const modelOptions = parseModelOptions(
     pickEnv("APIYI_IMAGE_MODEL_OPTIONS", "GPT_IMAGE_MODEL_OPTIONS", "N1N_IMAGE_MODEL_OPTIONS"),
     model,
-  );
+  )
+    .map(sanitizeImageModelName)
+    .filter(Boolean);
   const timeoutMs = parseTimeoutMs(
     pickEnv("APIYI_IMAGE_TIMEOUT_MS", "GPT_IMAGE_TIMEOUT_MS", "N1N_IMAGE_TIMEOUT_MS"),
   );
@@ -77,8 +88,12 @@ function resolveGptImageConfig() {
     apiKey,
     model,
     providerName,
-    modelOptions,
+    modelOptions: modelOptions.length ? [...new Set(modelOptions)] : [model],
     timeoutMs,
+    configWarning:
+      rawModel !== model
+        ? "图片模型配置格式异常，已自动使用第一行有效模型名。请检查服务端环境变量。"
+        : "",
   };
 }
 
@@ -92,6 +107,7 @@ export function getPromptSkillImageConfig(): PromptSkillImageConfigResponse {
     modelOptions: config.modelOptions,
     timeoutMs: config.timeoutMs,
     missing: config.apiKey ? [] : ["APIYI_IMAGE_API_KEY"],
+    warning: config.configWarning,
   };
 }
 

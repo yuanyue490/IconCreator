@@ -126,12 +126,6 @@ export function AiGenerateSection({
     }
   }
 
-  async function handleCopyPrompt() {
-    const text = `主体提示词\n${filledPrompts.prompt}\n\n规避内容\n${filledPrompts.negativePrompt}`;
-    await navigator.clipboard.writeText(text);
-    onToast("已复制提示词");
-  }
-
   function handleRemoveAiSession(session: AiGenerationHistorySession) {
     const index = aiSessions.findIndex((item) => item.id === session.id);
     if (index < 0) return;
@@ -159,14 +153,6 @@ export function AiGenerateSection({
             <div className="ai-generate__eyebrow">AI 3D 图标生成</div>
             <h2 className="ai-generate__title">把一个业务对象变成 2 张可选图标</h2>
           </div>
-          <button
-            className="btn-subtle inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[12.5px]"
-            onClick={() => void handleCopyPrompt()}
-            type="button"
-          >
-            <Icon icon="lucide:copy" width="14" />
-            复制提示词
-          </button>
         </div>
 
         <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -301,7 +287,11 @@ export function AiGenerateSection({
               disabled={loading}
               type="button"
             >
-              <Icon icon={loading ? "lucide:loader-circle" : "lucide:sparkles"} width="16" />
+              <Icon
+                className={loading ? "loading-icon" : undefined}
+                icon={loading ? "lucide:loader-circle" : "lucide:sparkles"}
+                width="16"
+              />
               {loading ? "生成中..." : "生成 2 张"}
             </button>
           </aside>
@@ -347,7 +337,7 @@ export function AiGenerateSection({
                 </div>
               </div>
               <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
-                <Icon icon="lucide:loader-circle" width="15" />
+                <Icon className="loading-icon" icon="lucide:loader-circle" width="15" />
                 正在生成图像
               </div>
             </div>

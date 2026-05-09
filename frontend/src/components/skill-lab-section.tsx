@@ -44,13 +44,6 @@ function slotText(value: string | string[] | undefined) {
   return value?.trim() || "待补充";
 }
 
-function statusLabel(status: PromptSkillSessionStatus) {
-  if (status === "collecting") return "需求梳理";
-  if (status === "confirming") return "等待确认";
-  if (status === "ready") return "可生成";
-  return "已生成";
-}
-
 async function writeClipboardText(text: string) {
   if (navigator.clipboard?.writeText && window.isSecureContext) {
     await navigator.clipboard.writeText(text);
@@ -360,7 +353,6 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
           </p>
         </div>
         <div className="skill-lab__header-actions">
-          <span className="skill-lab__status">{statusLabel(status)}</span>
           <button
             type="button"
             className="btn-ghost inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[13px]"
@@ -492,7 +484,11 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
               onClick={() => void submitTurn(input)}
               disabled={loading || !canSubmit}
             >
-              <Icon icon={loading ? "lucide:loader-circle" : "lucide:send"} width="15" />
+              <Icon
+                className={loading ? "loading-icon" : undefined}
+                icon={loading ? "lucide:loader-circle" : "lucide:send"}
+                width="15"
+              />
               {loading ? "处理中..." : "发送"}
             </button>
           </div>
@@ -565,7 +561,11 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
               onClick={() => void handleGenerateImage()}
               disabled={imageLoading || !editablePrompt.trim() || imageConfigLoading}
             >
-              <Icon icon={imageLoading ? "lucide:loader-circle" : "lucide:image"} width="15" />
+              <Icon
+                className={imageLoading ? "loading-icon" : undefined}
+                icon={imageLoading ? "lucide:loader-circle" : "lucide:image"}
+                width="15"
+              />
               {imageLoading ? "生成中..." : "生成图片"}
             </button>
             {imageResult ? (

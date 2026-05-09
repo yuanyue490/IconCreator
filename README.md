@@ -2,7 +2,7 @@
 
 > 一次生成，批量匹配。AI 驱动的图标创作与检索工作台。
 
-本仓库是「图标大厨」的主工程（代码仓名仍为 IconCreator，包命名空间仍为 `@iconcraft/*`，仅用于内部标识），目前已经进入 **正式开发阶段**。项目以 `pnpm workspace` 组织 `frontend`、`backend`、`shared` 三个包，原型文件仍保留用于设计参考。
+本仓库是「图标大厨」的主工程（代码仓名仍为 IconCreator，包命名空间仍为 `@iconcraft/*`，仅用于内部标识），当前前端展示版本为 **v1.0**，已收敛为首个可发布版本。项目以 `pnpm workspace` 组织 `frontend`、`backend`、`shared` 三个包，原型文件仍保留用于设计参考。
 
 ---
 
@@ -63,6 +63,7 @@ IconCreator/
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。
 - 多图标库切换：当前支持 `Lucide`、`Heroicons`、`Phosphor`、`Tabler` 的已接入风格组合。
 - LLM 配置：支持前端本地持久化 `baseURL`、`apiKey`、`model`、`systemPrompt`；也支持后端 `LLM_*` 环境变量兜底与 BYOK 共存。
+- 发布版本：工作台顶部展示 **v1.0**；npm workspace 包版本仍为内部语义版本 `0.1.0`，两者解耦。
 - **UI 与层级**：全屏弹窗（`.dialog-backdrop` / `.dialog-panel`）使用较高 `z-index`，保证盖过输入区 `border-beam` 等装饰层；详情弹窗内 SVG 源码区为预格式化换行，避免横向撑出滚动条（见 `docs/DESIGN.md` 附录）。
 
 ## 模块边界约定

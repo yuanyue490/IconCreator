@@ -1,8 +1,18 @@
 # 图标大厨（IconCraft）项目进度记录
 
-> **日期**：2026-05-07
-> **阶段**：首版上线前收敛 · 数字孪生生成闭环 · 生产配置核查
-> **文档版本**：PRD v3.2 · Workspace MVP+ · Digital Twin Workflow
+> **日期**：2026-05-09
+> **阶段**：v1.0 发布版 · 数字孪生生成闭环 · 三模块边界收敛
+> **文档版本**：PRD v3.2 · Workspace v1.0 · Digital Twin Workflow
+
+---
+
+## 最新更新（2026-05-09）
+
+- **前端展示版本升为 v1.0**：工作台顶部品牌区展示 `v1.0`，用于对外发布识别；npm workspace 包版本仍保持内部语义版本 `0.1.0`，与产品展示版本解耦。
+- **数字孪生对话体验稳定**：追问轮次返回 `followUpQuestions` 时，前端只展示可选问题卡，不再额外插入重复的助手文字气泡；确认摘要、生成完成等无选项场景仍保留文字反馈。
+- **本地联调结论**：数字孪生文本生成继续走当前 LLM 设置中的 OpenAI-compatible `/chat/completions`，不绑定 MiniMax；此前超时排查确认是本机代理 / TUN fake-ip 链路导致请求未到达供应商，恢复网络后本地可正常运行。
+- **模块边界固化**：新增 ADR-006，明确 `AI 生成`、`SVG 匹配`、`数字孪生` 是三个独立模块；后续共享 LLM / API 代码变更必须先确认影响范围，并回归对应模块核心路径。
+- **发布判断**：当前版本可作为首个发布版本继续上线，发布前仍需确认生产后端已包含 `/api/prompt-skills/*` 与 `/api/prompt-skills/image-config`，并完成 API Key 轮换与 secret 配置。
 
 ---
 
@@ -23,8 +33,8 @@
 
 ## 最新更新（2026-05-06）
 
-- **Skill 协同实验入口**：工作台新增第三个模式 **「Skill协同」**，用于验证「Markdown Skill + MiniMax」的多轮提示词生成工作流；入口与 `AI 生成`、`SVG匹配` 并列，不影响既有 AI 图标生成与 SVG 匹配链路。
-- **后端 · Prompt Skill API**：新增 `POST /api/prompt-skills/test` 与 `POST /api/prompt-skills/turn`；服务层 `prompt-skill-service.ts` 复用现有 OpenAI-compatible `/chat/completions` 调用方式，把 Skill Markdown、会话状态、用户输入组装给 MiniMax，并要求模型返回结构化 JSON。
+- **Skill 协同实验入口**：工作台新增第三个模式 **「Skill协同」**，用于验证「Markdown Skill + OpenAI-compatible 文本模型」的多轮提示词生成工作流；入口与 `AI 生成`、`SVG匹配` 并列，不影响既有 AI 图标生成与 SVG 匹配链路。
+- **后端 · Prompt Skill API**：新增 `POST /api/prompt-skills/test` 与 `POST /api/prompt-skills/turn`；服务层 `prompt-skill-service.ts` 复用现有 OpenAI-compatible `/chat/completions` 调用方式，把 Skill Markdown、会话状态、用户输入组装给当前 LLM 设置中的文本模型，并要求模型返回结构化 JSON。
 - **多轮会话协议**：共享类型新增 `PromptSkillSlots`、`PromptSkillQuestion`、`PromptSkillTurnRequest`、`PromptSkillTurnResponse` 等；模型每轮返回 `slots`、`missingFields`、`followUpQuestions`、`assistantMessage`、`prompt`、`variants`、`usageTips`，前端据此驱动需求澄清、摘要确认与最终生成。
 - **前端 · 多轮体验**：`SkillLabSection` 从单次测试窗升级为对话式工作流：左侧展示需求输入与系统反馈，右侧展示需求摘要、生成结果和变体建议；信息足够后在对话尾部展示 **「确认生成提示词」**，点击即发送确认。
 - **追问表单稳定性**：模型返回的 `followUpQuestions` 直接渲染在对话框中；用户可先选择多个选项，选择 **自定义 / 其他** 时出现自定义输入框，最后点击 **「确认并发送补充信息」** 才一次性提交，避免点选项即自动发送造成中断。

@@ -245,6 +245,9 @@ export function WorkbenchPage() {
             厨
           </div>
           <div className="text-sm font-semibold">图标大厨</div>
+          <div className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] font-medium text-[#a0a0a0]">
+            v1.0
+          </div>
         </div>
 
         <div className="flex items-center gap-1">
@@ -328,7 +331,7 @@ export function WorkbenchPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[11.5px] uppercase tracking-[0.2em] text-[#5a5a5a]">图标库</span>
                     <select
-                      className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
+                      className="select-control h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
                       value={selectedLibrary}
                       onChange={(event) => handleLibraryChange(event.target.value as IconLibraryId)}
                     >
@@ -339,7 +342,7 @@ export function WorkbenchPage() {
                       ))}
                     </select>
                     <select
-                      className="h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
+                      className="select-control h-9 rounded-lg border border-white/8 bg-[#111] px-3 text-sm text-[#f5f5f5] outline-none transition focus:border-white/20"
                       value={selectedStyle}
                       onChange={(event) => setSelectedStyle(event.target.value as IconStyleId)}
                     >
@@ -357,7 +360,11 @@ export function WorkbenchPage() {
                     onClick={() => void handleMatch()}
                     disabled={loading}
                   >
-                    <Icon icon={loading ? "lucide:loader-circle" : "lucide:rocket"} width="15" />
+                    <Icon
+                      className={loading ? "loading-icon" : undefined}
+                      icon={loading ? "lucide:loader-circle" : "lucide:rocket"}
+                      width="15"
+                    />
                     {loading ? "匹配中..." : "开始匹配"}
                   </button>
                 </div>
@@ -421,7 +428,7 @@ export function WorkbenchPage() {
                       </div>
                     </div>
                     <div className="inline-flex items-center gap-2 text-sm text-[#8a8a8a]">
-                      <Icon icon="lucide:loader-circle" width="15" />
+                      <Icon className="loading-icon" icon="lucide:loader-circle" width="15" />
                       正在生成新结果组
                     </div>
                   </div>

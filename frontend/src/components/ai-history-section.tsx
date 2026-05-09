@@ -111,7 +111,11 @@ export function AiHistorySection({ session, onDelete, onToast }: AiHistorySectio
             onClick={() => void handleExportZip()}
             disabled={exporting}
           >
-            <Icon icon={exporting ? "lucide:loader-circle" : "lucide:archive"} width="14" />
+            <Icon
+              className={exporting ? "loading-icon" : undefined}
+              icon={exporting ? "lucide:loader-circle" : "lucide:archive"}
+              width="14"
+            />
             {exporting ? "打包中..." : "导出这组"}
           </button>
           <button

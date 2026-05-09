@@ -189,8 +189,15 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
       setMessages([...nextMessages, { role: "assistant", content: response.assistantMessage }]);
       onToast(response.status === "generated" ? "提示词已生成" : "需求信息已更新");
     } catch (error) {
-      setMessages(messages);
-      onToast(error instanceof Error ? error.message : "需求处理失败，请稍后重试");
+      const message = error instanceof Error ? error.message : "需求处理失败，请稍后重试";
+      setMessages([
+        ...nextMessages,
+        {
+          role: "assistant",
+          content: `${message}\n\n已保留本次输入，请稍后重试或检查服务配置。`,
+        },
+      ]);
+      onToast(message);
     } finally {
       setLoading(false);
     }

@@ -81,20 +81,34 @@ export async function testPromptSkill(input: PromptSkillTestRequest) {
 }
 
 export async function runPromptSkillTurn(input: PromptSkillTurnRequest) {
-  const response = await fetch("/api/prompt-skills/turn", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 70000);
+  let response: Response;
+
+  try {
+    response = await fetch("/api/prompt-skills/turn", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    }).catch((error) => {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("需求生成超过 70 秒未返回，请稍后重试。");
+      }
+      throw error;
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
 
   const payload = (await response.json().catch(() => null)) as
     | (Partial<PromptSkillTurnResponse> & { message?: string })
     | null;
 
   if (!response.ok) {
-    throw new Error(payload?.error ?? payload?.message ?? "需求处理失败，请稍后重试");
+    throw new Error(payload?.message ?? payload?.error ?? "需求处理失败，请稍后重试");
   }
 
   return payload as PromptSkillTurnResponse;

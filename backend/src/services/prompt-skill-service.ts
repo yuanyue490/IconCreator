@@ -8,6 +8,8 @@ import type {
   PromptSkillTurnResponse,
 } from "@iconcraft/shared";
 
+const DEFAULT_PROMPT_SKILL_TIMEOUT_MS = 60000;
+
 import { resolveLlmConfig } from "./llm-client.js";
 
 const TEST_OUTPUT_CONTRACT = `你必须只返回一个 JSON 对象，不要 Markdown，不要代码块，不要解释。
@@ -80,6 +82,14 @@ function normalizeStringArray(value: unknown): string[] {
     .filter((item): item is string => typeof item === "string")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function resolvePromptSkillTimeoutMs() {
+  const parsed = Number(process.env.PROMPT_SKILL_TIMEOUT_MS);
+  if (!Number.isFinite(parsed) || parsed < 10000) {
+    return DEFAULT_PROMPT_SKILL_TIMEOUT_MS;
+  }
+  return Math.min(parsed, 120000);
 }
 
 function normalizeSlots(value: unknown): PromptSkillSlots {
@@ -172,6 +182,7 @@ async function requestCompletion(input: {
   const resolved = resolveLlmConfig(input.llm);
   const baseURL = resolved.baseURL.replace(/\/+$/, "");
   const requestUrl = baseURL ? `${baseURL}/chat/completions` : null;
+  const timeoutMs = resolvePromptSkillTimeoutMs();
 
   if (!requestUrl || !resolved.model) {
     return {
@@ -187,9 +198,14 @@ async function requestCompletion(input: {
     };
   }
 
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
   try {
+    const controller = new AbortController();
+    timeout = setTimeout(() => controller.abort(), timeoutMs);
     const response = await fetch(requestUrl, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(resolved.apiKey ? { Authorization: `Bearer ${resolved.apiKey}` } : {}),
@@ -201,6 +217,8 @@ async function requestCompletion(input: {
         messages: input.messages,
       }),
     });
+    clearTimeout(timeout);
+    timeout = undefined;
 
     const upstreamStatus = response.status;
     const body = await response.text();
@@ -235,10 +253,18 @@ async function requestCompletion(input: {
       },
     };
   } catch (error) {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    const isAbortError = error instanceof Error && error.name === "AbortError";
     return {
       ok: false as const,
       raw: "",
-      error: error instanceof Error ? error.message : "需求生成服务连接失败，请稍后重试。",
+      error: isAbortError
+        ? `需求生成超过 ${Math.round(timeoutMs / 1000)} 秒未返回，请稍后重试。`
+        : error instanceof Error
+          ? error.message
+          : "需求生成服务连接失败，请稍后重试。",
       meta: {
         requestUrl,
         model: resolved.model || null,

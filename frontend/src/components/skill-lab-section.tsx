@@ -186,7 +186,12 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
         setSourcePrompt(response.prompt);
         setEditablePrompt(response.prompt);
       }
-      setMessages([...nextMessages, { role: "assistant", content: response.assistantMessage }]);
+      const shouldShowAssistantMessage = response.followUpQuestions.length === 0;
+      setMessages(
+        shouldShowAssistantMessage
+          ? [...nextMessages, { role: "assistant", content: response.assistantMessage }]
+          : nextMessages,
+      );
       onToast(response.status === "generated" ? "提示词已生成" : "需求信息已更新");
     } catch (error) {
       const message = error instanceof Error ? error.message : "需求处理失败，请稍后重试";

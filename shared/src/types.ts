@@ -216,6 +216,7 @@ export interface PromptSkillTestResponse {
     model: string | null;
     durationMs: number;
     upstreamStatus: number | null;
+    usedJsonFormatFallback?: boolean;
   };
 }
 
@@ -248,6 +249,7 @@ export interface PromptSkillTurnResponse {
     model: string | null;
     durationMs: number;
     upstreamStatus: number | null;
+    usedJsonFormatFallback?: boolean;
   };
 }
 

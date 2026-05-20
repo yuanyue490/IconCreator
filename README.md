@@ -57,7 +57,7 @@ IconCreator/
 
 ## 当前已实现
 
-- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**（多套「提示词风格」Chip 切换，持久化于 `localStorage`；生成历史条目标记所用风格名）、**数字孪生模式**（多轮需求补充 / 摘要确认 / 提示词编辑 / 图片生成 / 全屏预览，默认规则位于 `frontend/src/prompts/digital-twin-skill.md`）、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格、图标详情弹窗、设置弹窗；**工作台「全局样式修改」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。全局 **`scrollbar-gutter: stable`**（及旧浏览器回退）减轻模式切换时滚动条显隐带来的布局左右抖动。
+- `frontend`：SVG 匹配工作台、**AI 3D 生成模式**（多套「提示词风格」Chip 切换，支持自定义 Positive / Negative 模板与 `{生成物体}`、`{主色调}`、`{材质}` 占位符替换；生成历史条目标记所用风格名）、**数字孪生模式**（多轮需求补充 / 半透明浮层摘要 / 提示词编辑 / 图片生成 / 全屏预览，默认规则位于 `frontend/src/prompts/digital-twin-skill.md`）、品牌 Banner、**匹配历史（最新在前，最多 10 组，Zustand + `localStorage` 持久化）**、按组摘要与 **按组 SVG ZIP 导出**、结果卡片网格、图标详情弹窗、设置弹窗；**工作台「全局样式修改」**行可调导出/预览 **边长**（**16 / 20 / 24 / 32 / 40 / 48 / 64** px 七档，默认 24）与 **单色**（`localStorage` 持久化，与复制、下载、ZIP 及结果区预览一致）。全局 **`scrollbar-gutter: stable`**（及旧浏览器回退）减轻模式切换时滚动条显隐带来的布局左右抖动。
 - `backend`：`/api/match` 匹配接口、`/api/ai/generate` AI 生图代理、`/api/prompt-skills/test` 与 `/api/prompt-skills/turn` 数字孪生需求补充接口、`/api/prompt-skills/image-config` 图片模型配置自检、`/api/prompt-skills/generate-image` 数字孪生图片生成、`/api/icons/:library/:style/:name.svg` SVG 代理接口、图标名合法性校验、进程内缓存。
 - `shared`：匹配与 AI 生成类型、数字孪生提示词 / 图片生成类型、图标库与风格配置、AI 3D prompt / preset 配置、提示词预设，以及 `aliases.json + names.json` 双层本地 catalog。
 - 匹配链路：`本地词典精确匹配 -> LLM 语义匹配 -> LLM 关键词扩展 + 全量名字字面命中 -> 本地兜底匹配`。

@@ -73,6 +73,69 @@ function stripCodeFence(text: string) {
     .replace(/\s*```$/, "");
 }
 
+function compactText(text: string, maxLength = 220) {
+  const compacted = text.replace(/\s+/g, " ").trim();
+  return compacted.length > maxLength ? `${compacted.slice(0, maxLength)}...` : compacted;
+}
+
+function readNestedMessage(value: unknown): string {
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+
+  const raw = value as Record<string, unknown>;
+  for (const key of ["message", "msg", "detail", "error_description"]) {
+    if (typeof raw[key] === "string" && raw[key].trim()) {
+      return raw[key].trim();
+    }
+  }
+
+  if (raw.error) {
+    if (typeof raw.error === "string" && raw.error.trim()) {
+      return raw.error.trim();
+    }
+    return readNestedMessage(raw.error);
+  }
+
+  return "";
+}
+
+function extractUpstreamMessage(body: string) {
+  if (!body.trim()) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(body) as unknown;
+    const message = readNestedMessage(parsed);
+    return compactText(message || body);
+  } catch {
+    return compactText(body);
+  }
+}
+
+function shouldRetryWithoutJsonFormat(status: number, body: string) {
+  if (status < 400 || status >= 500) {
+    return false;
+  }
+
+  const normalized = body.toLowerCase();
+  return (
+    normalized.includes("response_format") ||
+    normalized.includes("json_object") ||
+    normalized.includes("json mode") ||
+    normalized.includes("unsupported parameter") ||
+    normalized.includes("invalid parameter")
+  );
+}
+
+function formatUpstreamError(status: number, body: string) {
+  const upstreamMessage = extractUpstreamMessage(body);
+  return upstreamMessage
+    ? `需求生成服务返回异常（${status}：${upstreamMessage}），请检查模型配置或稍后重试。`
+    : `需求生成服务返回异常（${status}），请检查模型配置或稍后重试。`;
+}
+
 function normalizeStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -198,41 +261,63 @@ async function requestCompletion(input: {
     };
   }
 
+  const completionUrl = requestUrl;
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
-    const controller = new AbortController();
-    timeout = setTimeout(() => controller.abort(), timeoutMs);
-    const response = await fetch(requestUrl, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(resolved.apiKey ? { Authorization: `Bearer ${resolved.apiKey}` } : {}),
-      },
-      body: JSON.stringify({
+    async function sendRequest(useJsonFormat: boolean) {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), timeoutMs);
+      const requestBody: Record<string, unknown> = {
         model: resolved.model,
         temperature: input.temperature ?? 0.2,
-        response_format: { type: "json_object" },
         messages: input.messages,
-      }),
-    });
-    clearTimeout(timeout);
-    timeout = undefined;
+      };
 
-    const upstreamStatus = response.status;
-    const body = await response.text();
+      if (useJsonFormat) {
+        requestBody.response_format = { type: "json_object" };
+      }
+
+      const response = await fetch(completionUrl, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...(resolved.apiKey ? { Authorization: `Bearer ${resolved.apiKey}` } : {}),
+        },
+        body: JSON.stringify(requestBody),
+      });
+      clearTimeout(timeout);
+      timeout = undefined;
+
+      return {
+        response,
+        upstreamStatus: response.status,
+        body: await response.text(),
+      };
+    }
+
+    let result = await sendRequest(true);
+    let usedJsonFormatFallback = false;
+
+    if (!result.response.ok && shouldRetryWithoutJsonFormat(result.upstreamStatus, result.body)) {
+      result = await sendRequest(false);
+      usedJsonFormatFallback = true;
+    }
+
+    const { upstreamStatus, body, response } = result;
 
     if (!response.ok) {
       return {
         ok: false as const,
         raw: body,
-        error: `需求生成服务返回异常，请稍后重试。`,
+        error: formatUpstreamError(upstreamStatus, body),
         meta: {
           requestUrl,
           model: resolved.model,
           durationMs: Date.now() - startedAt,
           upstreamStatus,
+          usedJsonFormatFallback,
         },
       };
     }
@@ -250,6 +335,7 @@ async function requestCompletion(input: {
         model: resolved.model,
         durationMs: Date.now() - startedAt,
         upstreamStatus,
+        usedJsonFormatFallback,
       },
     };
   } catch (error) {

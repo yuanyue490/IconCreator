@@ -14,6 +14,11 @@ const presetsConfig = presetsConfigJson as Ai3dIconPresetsConfig;
 
 const RESOLUTION_OPTIONS: AiImageResolution[] = ["1K", "2K", "4K"];
 const RATIO_OPTIONS: AiImageAspectRatio[] = ["1:1", "16:9", "9:16", "4:3", "3:4"];
+const CUSTOM_STYLE_ID = "__custom_prompt_style";
+const DEFAULT_CUSTOM_PROMPT =
+  "生成一个单独的「{生成物体}」三维图标，主体居中，只呈现该物体本身。整体以「{主色调}」为主色，材质体现「{材质}」。画面干净，结构清晰，适合用于产品界面。";
+const DEFAULT_CUSTOM_NEGATIVE =
+  "不要文字、数字、水印、人物、复杂场景、多物体堆叠、低清晰度、脏污纹理";
 
 function applyStyleVars(template: Ai3dIconStyleConfig, values: { object: string; color: string; material: string }) {
   const replacements: Record<string, string> = {
@@ -45,6 +50,9 @@ export function AiGenerateSection({
   const [aspectRatio, setAspectRatio] = useState<AiImageAspectRatio>("1:1");
   const [loading, setLoading] = useState(false);
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
+  const [customStyleActive, setCustomStyleActive] = useState(false);
+  const [customPromptTemplate, setCustomPromptTemplate] = useState(DEFAULT_CUSTOM_PROMPT);
+  const [customNegativeTemplate, setCustomNegativeTemplate] = useState(DEFAULT_CUSTOM_NEGATIVE);
 
   const aiSessions = useAiGenerationHistoryStore((state) => state.sessions);
   const addAiSession = useAiGenerationHistoryStore((state) => state.addSession);
@@ -58,8 +66,31 @@ export function AiGenerateSection({
   } | null>(null);
 
   const stylesCatalog = getAiStylesCatalog();
-  const activeVariant =
-    stylesCatalog.styles.find((s) => s.id === selectedStyleId) ?? stylesCatalog.styles[0];
+  const customVariant = useMemo<Ai3dIconStyleConfig & { id: string; label: string }>(
+    () => ({
+      id: CUSTOM_STYLE_ID,
+      label: "自定义",
+      type: "custom_prompt_style",
+      vars: {
+        object: "{生成物体}",
+        color: "{主色调}",
+        material: "{材质}",
+      },
+      prompt: customPromptTemplate,
+      negative: customNegativeTemplate,
+    }),
+    [customNegativeTemplate, customPromptTemplate],
+  );
+  const activeVariant = customStyleActive
+    ? customVariant
+    : stylesCatalog.styles.find((s) => s.id === selectedStyleId) ?? stylesCatalog.styles[0];
+  const activeDescription =
+    !customStyleActive &&
+    activeVariant &&
+    "description" in activeVariant &&
+    typeof activeVariant.description === "string"
+      ? activeVariant.description
+      : "";
 
   const selectedColor = presetsConfig.colors.find((item) => item.id === selectedColorId) ?? presetsConfig.colors[0];
   const selectedMaterial =
@@ -81,6 +112,10 @@ export function AiGenerateSection({
     }
     if (!colorPhrase || !materialPhrase) {
       onToast("请选择主色和材质");
+      return;
+    }
+    if (customStyleActive && !customPromptTemplate.trim()) {
+      onToast("请先填写自定义提示词模板");
       return;
     }
 
@@ -174,16 +209,51 @@ export function AiGenerateSection({
                   <button
                     key={variant.id}
                     type="button"
-                    className={`chip${variant.id === activeVariant?.id ? " is-active" : ""}`}
+                    className={`chip${!customStyleActive && variant.id === activeVariant?.id ? " is-active" : ""}`}
                     title={variant.description ?? variant.label}
-                    onClick={() => setSelectedStyleId(variant.id)}
+                    onClick={() => {
+                      setCustomStyleActive(false);
+                      setSelectedStyleId(variant.id);
+                    }}
                   >
                     {variant.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  className={`chip${customStyleActive ? " is-active" : ""}`}
+                  title="自行编写提示词模板"
+                  onClick={() => setCustomStyleActive(true)}
+                >
+                  自定义
+                </button>
               </div>
-              {activeVariant?.description ? (
-                <p className="mt-2 text-[12px] leading-relaxed text-[#8a8a8a]">{activeVariant.description}</p>
+              {activeDescription ? (
+                <p className="mt-2 text-[12px] leading-relaxed text-[#8a8a8a]">{activeDescription}</p>
+              ) : null}
+              {customStyleActive ? (
+                <div className="ai-custom-style">
+                  <label>
+                    <span className="ai-custom-style__label">主体提示词模板</span>
+                    <textarea
+                      className="ai-custom-style__textarea"
+                      value={customPromptTemplate}
+                      onChange={(event) => setCustomPromptTemplate(event.target.value)}
+                      placeholder="可使用 {生成物体}、{主色调}、{材质}"
+                      spellCheck={false}
+                    />
+                  </label>
+                  <label>
+                    <span className="ai-custom-style__label">规避内容</span>
+                    <textarea
+                      className="ai-custom-style__textarea ai-custom-style__textarea--small"
+                      value={customNegativeTemplate}
+                      onChange={(event) => setCustomNegativeTemplate(event.target.value)}
+                      placeholder="可选：不希望出现的内容"
+                      spellCheck={false}
+                    />
+                  </label>
+                </div>
               ) : null}
             </div>
 

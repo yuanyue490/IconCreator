@@ -348,9 +348,7 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
         <div>
           <div className="ai-generate__eyebrow">Digital Twin Image</div>
           <h2 className="ai-generate__title">数字孪生参考生成器</h2>
-          <p className="skill-lab__intro">
-            通过多轮对话完成提示词生成与效果图生成。
-          </p>
+          <p className="skill-lab__intro">先补充需求生成提示词，再微调提示词生成图片参考。</p>
         </div>
         <div className="skill-lab__header-actions">
           <button
@@ -365,254 +363,264 @@ export function SkillLabSection({ onToast }: SkillLabSectionProps) {
         </div>
       </div>
 
-      <div className="skill-lab__grid skill-lab__grid--workflow">
-        <div className="skill-lab__panel">
-          <div className="skill-lab__conversation" aria-label="需求补充对话">
-            {messages.length === 0 ? (
-              <div className="skill-lab__empty">
-                输入一个初始需求，系统会判断是否需要补充信息。
-              </div>
-            ) : (
-              <>
-                {messages.map((message, index) => (
-                  <div
-                    className={`skill-lab__message skill-lab__message--${message.role}`}
-                    key={`${message.role}-${index}`}
-                  >
-                    <div className="skill-lab__message-role">
-                      {message.role === "user" ? "需求输入" : "系统反馈"}
-                    </div>
-                    <div className="skill-lab__message-content">{message.content}</div>
+      <div className="skill-lab__workflow-stack">
+        <section className="skill-lab__step-panel" aria-labelledby="digital-twin-step-prompt">
+          <div className="skill-lab__step-head">
+            <div>
+              <div className="skill-lab__step-kicker">第一步</div>
+              <h3 className="skill-lab__step-title" id="digital-twin-step-prompt">
+                生成提示词
+              </h3>
+            </div>
+          </div>
+
+          <div className="skill-lab__prompt-workspace">
+            <div className="skill-lab__conversation" aria-label="需求补充对话">
+                {messages.length === 0 ? (
+                  <div className="skill-lab__empty">
+                    暂无对话
                   </div>
-                ))}
+                ) : (
+                  <>
+                    {messages.map((message, index) => (
+                      <div
+                        className={`skill-lab__message skill-lab__message--${message.role}`}
+                        key={`${message.role}-${index}`}
+                      >
+                        <div className="skill-lab__message-role">
+                          {message.role === "user" ? "需求输入" : "系统反馈"}
+                        </div>
+                        <div className="skill-lab__message-content">{message.content}</div>
+                      </div>
+                    ))}
 
-                {latest?.followUpQuestions.length ? (
-                  <div className="skill-lab__question-card">
-                    <div className="skill-lab__question-card-title">请补充以下信息</div>
-                    <div className="skill-lab__questions">
-                      {latest.followUpQuestions.map((question, index) => {
-                        const key = questionKey(question, index);
-                        const draft = questionAnswers[key] ?? { selected: [], custom: "" };
-                        const options = questionOptions(question);
-                        const showCustom =
-                          question.type === "text" || draft.selected.some(isCustomOption);
+                    {latest?.followUpQuestions.length ? (
+                      <div className="skill-lab__question-card">
+                        <div className="skill-lab__question-card-title">请补充以下信息</div>
+                        <div className="skill-lab__questions">
+                          {latest.followUpQuestions.map((question, index) => {
+                            const key = questionKey(question, index);
+                            const draft = questionAnswers[key] ?? { selected: [], custom: "" };
+                            const options = questionOptions(question);
+                            const showCustom =
+                              question.type === "text" || draft.selected.some(isCustomOption);
 
-                        return (
-                          <div className="skill-lab__question" key={key}>
-                            <div>{question.question}</div>
-                            {options.length ? (
-                              <div className="skill-lab__question-options">
-                                {options.map((option) => (
-                                  <button
-                                    type="button"
-                                    className={`chip ${draft.selected.includes(option) ? "is-active" : ""}`}
-                                    key={option}
-                                    onClick={() => updateQuestionOption(question, index, option)}
+                            return (
+                              <div className="skill-lab__question" key={key}>
+                                <div>{question.question}</div>
+                                {options.length ? (
+                                  <div className="skill-lab__question-options">
+                                    {options.map((option) => (
+                                      <button
+                                        type="button"
+                                        className={`chip ${draft.selected.includes(option) ? "is-active" : ""}`}
+                                        key={option}
+                                        onClick={() => updateQuestionOption(question, index, option)}
+                                        disabled={loading}
+                                      >
+                                        {option}
+                                      </button>
+                                    ))}
+                                  </div>
+                                ) : null}
+                                {showCustom ? (
+                                  <input
+                                    type="text"
+                                    className="skill-lab__custom-input"
+                                    value={draft.custom}
+                                    onChange={(event) =>
+                                      updateQuestionCustom(question, index, event.target.value)
+                                    }
+                                    placeholder="请输入自定义内容"
                                     disabled={loading}
-                                  >
-                                    {option}
-                                  </button>
-                                ))}
+                                  />
+                                ) : null}
                               </div>
-                            ) : null}
-                            {showCustom ? (
-                              <input
-                                type="text"
-                                className="skill-lab__custom-input"
-                                value={draft.custom}
-                                onChange={(event) =>
-                                  updateQuestionCustom(question, index, event.target.value)
-                                }
-                                placeholder="请输入自定义内容"
-                                disabled={loading}
-                              />
-                            ) : null}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-primary inline-flex h-9 items-center justify-center gap-2 rounded-lg px-4 text-[13px]"
-                      onClick={submitFollowUpAnswers}
-                      disabled={loading}
-                    >
-                      <Icon icon="lucide:check" width="15" />
-                      确认并发送补充信息
-                    </button>
-                  </div>
-                ) : null}
-
-                {status === "confirming" || status === "ready" ? (
-                  <div className="skill-lab__question-card">
-                    <div className="skill-lab__question-card-title">确认生成</div>
-                    <div className="skill-lab__question">
-                      如以上需求摘要无误，可直接确认生成最终提示词。
-                    </div>
-                    <button
-                      type="button"
-                      className="btn-primary inline-flex h-9 items-center justify-center gap-2 rounded-lg px-4 text-[13px]"
-                      onClick={() => void submitTurn("确认生成提示词。")}
-                      disabled={loading}
-                    >
-                      <Icon icon="lucide:check" width="15" />
-                      确认生成提示词
-                    </button>
-                  </div>
-                ) : null}
-              </>
-            )}
-          </div>
-
-          <div className="skill-lab__composer">
-            <textarea
-              className="skill-lab__textarea skill-lab__textarea--message"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-                  event.preventDefault();
-                  void submitTurn(input);
-                }
-              }}
-              placeholder="补充需求，或输入“确认生成”。"
-              spellCheck={false}
-            />
-            <button
-              type="button"
-              className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 text-[13.5px]"
-              onClick={() => void submitTurn(input)}
-              disabled={loading || !canSubmit}
-            >
-              <Icon
-                className={loading ? "loading-icon" : undefined}
-                icon={loading ? "lucide:loader-circle" : "lucide:send"}
-                width="15"
-              />
-              {loading ? "处理中..." : "发送"}
-            </button>
-          </div>
-        </div>
-
-        <aside className="skill-lab__panel">
-          <div className="skill-lab__block">
-            <div className="skill-lab__block-title">需求摘要</div>
-            <div className="skill-lab__slot-list">
-              {SLOT_LABELS.map(({ key, label }) => (
-                <div className="skill-lab__slot" key={key}>
-                  <span>{label}</span>
-                  <strong>{slotText(slots[key])}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="skill-lab__block">
-            <div className="skill-lab__result-head">
-              <div>
-                <div className="skill-lab__block-title">提示词编辑</div>
-                <div className="skill-lab__meta">
-                  {sourcePrompt
-                    ? editablePrompt.trim() === sourcePrompt.trim()
-                      ? "已根据需求生成，可直接修改"
-                      : "已手动调整"
-                    : "可跳过对话，直接输入提示词生成图片"}
-                </div>
-              </div>
-              <div className="skill-lab__prompt-actions">
-                <button
-                  type="button"
-                  className="btn-ghost inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px]"
-                  onClick={() => void copyPrompt()}
-                  disabled={!editablePrompt.trim()}
-                >
-                  <Icon icon="lucide:copy" width="14" />
-                  复制
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px]"
-                  onClick={() => setEditablePrompt(sourcePrompt)}
-                  disabled={!sourcePrompt || editablePrompt.trim() === sourcePrompt.trim()}
-                >
-                  <Icon icon="lucide:undo-2" width="14" />
-                  恢复
-                </button>
-              </div>
-            </div>
-            <textarea
-              className="skill-lab__prompt-editor"
-              value={editablePrompt}
-              onChange={(event) => setEditablePrompt(event.target.value)}
-              placeholder="可在此粘贴或编写提示词。通过对话生成后，提示词也会自动填入这里。"
-              spellCheck={false}
-            />
-          </div>
-
-          <div className="skill-lab__block">
-            <div className="skill-lab__block-title">图片生成</div>
-            <div className="skill-lab__image-hint">
-              可直接输入提示词后生成图片；画幅比例请写在提示词中，例如 16:9、竖版或超宽屏。
-            </div>
-            {imageError ? <div className="skill-lab__error">{imageError}</div> : null}
-            <button
-              type="button"
-              className="btn-primary mt-3 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 text-[13.5px]"
-              onClick={() => void handleGenerateImage()}
-              disabled={imageLoading || !editablePrompt.trim() || imageConfigLoading}
-            >
-              <Icon
-                className={imageLoading ? "loading-icon" : undefined}
-                icon={imageLoading ? "lucide:loader-circle" : "lucide:image"}
-                width="15"
-              />
-              {imageLoading ? "生成中..." : "生成图片"}
-            </button>
-            {imageResult ? (
-              <div className="skill-lab__image-meta">
-                {imageResult.meta.model} · {imageResult.meta.durationMs}ms
-              </div>
-            ) : null}
-            {imageResult?.images.length ? (
-              <div className="skill-lab__image-grid">
-                {imageResult.images.map((image, index) => {
-                  const src = imageSrc(image);
-                  const alt = `GPT Image 2 生成结果 ${index + 1}`;
-
-                  return (
-                    <article className="skill-lab__image-card" key={image.id}>
-                      {src ? (
+                            );
+                          })}
+                        </div>
                         <button
                           type="button"
-                          className="skill-lab__image-preview-trigger"
-                          onClick={() => setPreviewImage({ src, alt })}
-                          aria-label="放大预览图片"
+                          className="btn-primary inline-flex h-9 items-center justify-center gap-2 rounded-lg px-4 text-[13px]"
+                          onClick={submitFollowUpAnswers}
+                          disabled={loading}
                         >
-                          <img
-                            src={src}
-                            alt={alt}
-                            onError={() =>
-                              setImageError("图片已生成，但暂时无法加载预览。请稍后重试。")
-                            }
-                          />
+                          <Icon icon="lucide:check" width="15" />
+                          确认并发送补充信息
                         </button>
-                      ) : (
-                        <div>图片数据不可用</div>
-                      )}
-                    </article>
-                  );
-                })}
+                      </div>
+                    ) : null}
+
+                    {status === "confirming" || status === "ready" ? (
+                      <div className="skill-lab__question-card">
+                        <div className="skill-lab__question-card-title">确认生成</div>
+                        <div className="skill-lab__question">
+                          如以上需求摘要无误，可直接确认生成最终提示词。
+                        </div>
+                        <button
+                          type="button"
+                          className="btn-primary inline-flex h-9 items-center justify-center gap-2 rounded-lg px-4 text-[13px]"
+                          onClick={() => void submitTurn("确认生成提示词。")}
+                          disabled={loading}
+                        >
+                          <Icon icon="lucide:check" width="15" />
+                          确认生成提示词
+                        </button>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+
+                <details className="skill-lab__summary-panel" open>
+                  <summary>需求摘要</summary>
+                  <div className="skill-lab__slot-list">
+                    {SLOT_LABELS.map(({ key, label }) => (
+                      <div className="skill-lab__slot" key={key}>
+                        <span>{label}</span>
+                        <strong>{slotText(slots[key])}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+            </div>
+
+              <div className="skill-lab__composer">
+                <textarea
+                  className="skill-lab__textarea skill-lab__textarea--message"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+                      event.preventDefault();
+                      void submitTurn(input);
+                    }
+                  }}
+                  placeholder="补充需求，或输入“确认生成”。"
+                  spellCheck={false}
+                />
+                <button
+                  type="button"
+                  className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 text-[13.5px]"
+                  onClick={() => void submitTurn(input)}
+                  disabled={loading || !canSubmit}
+                >
+                  <Icon
+                    className={loading ? "loading-icon" : undefined}
+                    icon={loading ? "lucide:loader-circle" : "lucide:send"}
+                    width="15"
+                  />
+                  {loading ? "处理中..." : "发送"}
+                </button>
               </div>
-            ) : null}
+          </div>
+        </section>
+
+        <section className="skill-lab__step-panel" aria-labelledby="digital-twin-step-image">
+          <div className="skill-lab__step-head">
+            <div>
+              <div className="skill-lab__step-kicker">第二步</div>
+              <h3 className="skill-lab__step-title" id="digital-twin-step-image">
+                生成图片参考
+              </h3>
+            </div>
+          </div>
+
+          {imageError ? <div className="skill-lab__error">{imageError}</div> : null}
+          <div className="skill-lab__image-reference-layout">
+            <div className="skill-lab__block skill-lab__block--prompt-editor">
+              <div className="skill-lab__result-head">
+                <div>
+                  <div className="skill-lab__block-title">提示词编辑</div>
+                </div>
+                <div className="skill-lab__prompt-actions">
+                  <button
+                    type="button"
+                    className="btn-ghost inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px]"
+                    onClick={() => void copyPrompt()}
+                    disabled={!editablePrompt.trim()}
+                  >
+                    <Icon icon="lucide:copy" width="14" />
+                    复制
+                  </button>
+                </div>
+              </div>
+              <textarea
+                className="skill-lab__prompt-editor"
+                value={editablePrompt}
+                onChange={(event) => setEditablePrompt(event.target.value)}
+                placeholder="在第一步生成提示词，或者直接输入和编辑提示词"
+                spellCheck={false}
+              />
+              <div className="skill-lab__prompt-generate-actions">
+                <button
+                  type="button"
+                  className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-lg px-5 text-[13.5px]"
+                  onClick={() => void handleGenerateImage()}
+                  disabled={imageLoading || !editablePrompt.trim() || imageConfigLoading}
+                >
+                  <Icon
+                    className={imageLoading ? "loading-icon" : undefined}
+                    icon={imageLoading ? "lucide:loader-circle" : "lucide:image"}
+                    width="15"
+                  />
+                  {imageLoading ? "生成中..." : "生成图片"}
+                </button>
+              </div>
+            </div>
+
+            <div className="skill-lab__block skill-lab__block--image-result">
+              <div className="skill-lab__result-head">
+                <div className="skill-lab__block-title">生成结果</div>
+                {imageResult ? (
+                  <div className="skill-lab__image-meta">
+                    {imageResult.meta.model} · {imageResult.meta.durationMs}ms
+                  </div>
+                ) : null}
+              </div>
+              {imageResult?.images.length ? (
+                <div className="skill-lab__image-grid">
+                  {imageResult.images.map((image, index) => {
+                    const src = imageSrc(image);
+                    const alt = `GPT Image 2 生成结果 ${index + 1}`;
+
+                    return (
+                      <article className="skill-lab__image-card" key={image.id}>
+                        {src ? (
+                          <button
+                            type="button"
+                            className="skill-lab__image-preview-trigger"
+                            onClick={() => setPreviewImage({ src, alt })}
+                            aria-label="放大预览图片"
+                          >
+                            <img
+                              src={src}
+                              alt={alt}
+                              onError={() =>
+                                setImageError("图片已生成，但暂时无法加载预览。请稍后重试。")
+                              }
+                            />
+                          </button>
+                        ) : (
+                          <div>图片数据不可用</div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="skill-lab__image-empty">
+                  暂无图片结果
+                </div>
+              )}
             {sentPrompt ? (
               <details className="skill-lab__sent-prompt">
                 <summary>查看本次发送提示词</summary>
                 <pre>{sentPrompt}</pre>
               </details>
             ) : null}
+            </div>
           </div>
-
-        </aside>
+        </section>
       </div>
       {previewImage ? (
         <div

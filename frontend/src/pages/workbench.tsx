@@ -73,7 +73,7 @@ export function WorkbenchPage() {
     mode === "ai"
       ? "输入一个业务对象，选择适合大屏和 B 端项目的主色与材质，生成 2 张原创 3D 图标候选。"
       : mode === "skill"
-        ? "通过多轮对话完成提示词生成与效果图生成。"
+        ? ""
         : "输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。";
 
   useEffect(() => {
@@ -297,9 +297,11 @@ export function WorkbenchPage() {
             </div>
           </div>
 
-          <p className="mt-3 text-sm leading-6 text-[#a0a0a0]">
-            {featureDescription}
-          </p>
+          {featureDescription ? (
+            <p className="mt-3 text-sm leading-6 text-[#a0a0a0]">
+              {featureDescription}
+            </p>
+          ) : null}
         </section>
 
         {mode === "ai" ? (

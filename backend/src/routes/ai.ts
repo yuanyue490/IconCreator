@@ -14,7 +14,6 @@ const aiGenerateRequestSchema = z.object({
   object: z.string().trim().min(1).max(80),
   colorPhrase: z.string().trim().min(1).max(240),
   prompt: z.string().trim().min(1).max(3000),
-  negativePrompt: z.string().trim().max(1200),
   resolution: z.enum(resolutions),
   aspectRatio: z.enum(aspectRatios),
   count: z.literal(2),

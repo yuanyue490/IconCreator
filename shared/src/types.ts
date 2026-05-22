@@ -19,7 +19,6 @@ export interface Ai3dIconStyleConfig {
   vars: {
     object: string;
     color: string;
-    material: string;
   };
   prompt: string;
   negative: string;
@@ -47,18 +46,9 @@ export interface Ai3dColorPreset {
   swatch: string;
 }
 
-/** 材质预置：`thumb` 为相对站点根的路径，后期可换为实拍/渲染材质图 */
-export interface Ai3dMaterialPreset {
-  id: string;
-  label: string;
-  phrase: string;
-  thumb: string;
-}
-
 export interface Ai3dIconPresetsConfig {
   version: number;
   colors: Ai3dColorPreset[];
-  materials: Ai3dMaterialPreset[];
 }
 
 export interface AppSettings {
@@ -81,7 +71,6 @@ export type AiImageAspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
 export interface AiGenerateRequest {
   object: string;
   colorPhrase: string;
-  materialPhrase: string;
   prompt: string;
   negativePrompt: string;
   resolution: AiImageResolution;

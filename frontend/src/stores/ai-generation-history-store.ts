@@ -15,7 +15,8 @@ export interface AiGenerationHistorySession {
   createdAt: number;
   objectName: string;
   colorLabel: string;
-  materialLabel: string;
+  /** 旧版历史记录可能仍带有材质标签 */
+  materialLabel?: string;
   resolution: AiImageResolution;
   aspectRatio: AiImageAspectRatio;
   prompt: string;

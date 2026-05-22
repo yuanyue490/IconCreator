@@ -71,7 +71,7 @@ export function WorkbenchPage() {
   const safeExportSize = isPresetSize(settings.exportIconSizePx) ? settings.exportIconSizePx : 24;
   const featureDescription =
     mode === "ai"
-      ? "输入一个业务对象，选择适合大屏和 B 端项目的主色与材质，生成 2 张原创 3D 图标候选。"
+      ? "输入一个业务对象，选择适合大屏和 B 端项目的主色，生成 2 张原创 3D 图标候选。"
       : mode === "skill"
         ? ""
         : "输入一组词语，系统会通过本地结合大模型做语义匹配，返回当前图标库下可复制、可下载的 SVG 图标。";

@@ -97,7 +97,6 @@ async function requestImageBatch(input: AiGenerateRequest, config: ReturnType<ty
     body: JSON.stringify({
       model: config.model,
       prompt: input.prompt,
-      negative_prompt: input.negativePrompt,
       n: count,
       size,
       response_format: "url",

@@ -13,7 +13,7 @@ export interface PromptPreset {
   order: number;
 }
 
-/** 本地 JSON 配置的 3D 图标生图风格（vars 占位符与 prompt/negative 中的 token 对应） */
+/** 本地 JSON 配置的 3D 图标生图风格（vars 占位符与 prompt 中的 token 对应） */
 export interface Ai3dIconStyleConfig {
   type: string;
   vars: {
@@ -21,7 +21,6 @@ export interface Ai3dIconStyleConfig {
     color: string;
   };
   prompt: string;
-  negative: string;
 }
 
 /** 多套提示词模板中的一套（供前端整体风格切换） */
@@ -72,7 +71,6 @@ export interface AiGenerateRequest {
   object: string;
   colorPhrase: string;
   prompt: string;
-  negativePrompt: string;
   resolution: AiImageResolution;
   aspectRatio: AiImageAspectRatio;
   count: 2;

@@ -17,8 +17,6 @@ const RATIO_OPTIONS: AiImageAspectRatio[] = ["1:1", "16:9", "9:16", "4:3", "3:4"
 const CUSTOM_STYLE_ID = "__custom_prompt_style";
 const DEFAULT_CUSTOM_PROMPT =
   "生成一个单独的「{生成物体}」三维图标，主体居中，只呈现该物体本身。整体以「{主色调}」为主色。画面干净，结构清晰，适合用于产品界面。";
-const DEFAULT_CUSTOM_NEGATIVE =
-  "不要文字、数字、水印、人物、复杂场景、多物体堆叠、低清晰度、脏污纹理";
 
 function applyStyleVars(template: Ai3dIconStyleConfig, values: { object: string; color: string }) {
   const replacements: Record<string, string> = {
@@ -27,12 +25,10 @@ function applyStyleVars(template: Ai3dIconStyleConfig, values: { object: string;
   };
 
   let prompt = template.prompt;
-  let negativePrompt = template.negative;
   for (const [token, value] of Object.entries(replacements)) {
     prompt = prompt.split(token).join(value);
-    negativePrompt = negativePrompt.split(token).join(value);
   }
-  return { prompt, negativePrompt };
+  return prompt;
 }
 
 export function AiGenerateSection({
@@ -49,7 +45,6 @@ export function AiGenerateSection({
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
   const [customStyleActive, setCustomStyleActive] = useState(false);
   const [customPromptTemplate, setCustomPromptTemplate] = useState(DEFAULT_CUSTOM_PROMPT);
-  const [customNegativeTemplate, setCustomNegativeTemplate] = useState(DEFAULT_CUSTOM_NEGATIVE);
 
   const aiSessions = useAiGenerationHistoryStore((state) => state.sessions);
   const addAiSession = useAiGenerationHistoryStore((state) => state.addSession);
@@ -73,9 +68,8 @@ export function AiGenerateSection({
         color: "{主色调}",
       },
       prompt: customPromptTemplate,
-      negative: customNegativeTemplate,
     }),
-    [customNegativeTemplate, customPromptTemplate],
+    [customPromptTemplate],
   );
   const activeVariant = customStyleActive
     ? customVariant
@@ -90,11 +84,9 @@ export function AiGenerateSection({
 
   const selectedColor = presetsConfig.colors.find((item) => item.id === selectedColorId) ?? presetsConfig.colors[0];
   const colorPhrase = customColor.trim() || selectedColor?.phrase || "";
-  const filledPrompts = useMemo(
+  const filledPrompt = useMemo(
     () =>
-      activeVariant
-        ? applyStyleVars(activeVariant, { object: objectName, color: colorPhrase })
-        : { prompt: "", negativePrompt: "" },
+      activeVariant ? applyStyleVars(activeVariant, { object: objectName, color: colorPhrase }) : "",
     [activeVariant, objectName, colorPhrase],
   );
 
@@ -117,8 +109,7 @@ export function AiGenerateSection({
       const response = await generateAiIcons({
         object: objectName.trim(),
         colorPhrase,
-        prompt: filledPrompts.prompt,
-        negativePrompt: filledPrompts.negativePrompt,
+        prompt: filledPrompt,
         resolution,
         aspectRatio,
         count: 2,
@@ -136,8 +127,7 @@ export function AiGenerateSection({
           "",
         resolution,
         aspectRatio,
-        prompt: filledPrompts.prompt,
-        negativePrompt: filledPrompts.negativePrompt,
+        prompt: filledPrompt,
         images: response.images.map((img) => ({ url: img.url, b64Json: img.b64Json })),
         meta: response.meta,
       });
@@ -228,16 +218,6 @@ export function AiGenerateSection({
                       value={customPromptTemplate}
                       onChange={(event) => setCustomPromptTemplate(event.target.value)}
                       placeholder="可使用 {生成物体}、{主色调}"
-                      spellCheck={false}
-                    />
-                  </label>
-                  <label>
-                    <span className="ai-custom-style__label">规避内容</span>
-                    <textarea
-                      className="ai-custom-style__textarea ai-custom-style__textarea--small"
-                      value={customNegativeTemplate}
-                      onChange={(event) => setCustomNegativeTemplate(event.target.value)}
-                      placeholder="可选：不希望出现的内容"
                       spellCheck={false}
                     />
                   </label>
@@ -346,12 +326,8 @@ export function AiGenerateSection({
           {promptPreviewOpen ? (
             <div className="ai-prompt-preview__body">
               <div>
-                <div className="ai-prompt-preview__label">主体提示词</div>
-                <pre>{filledPrompts.prompt}</pre>
-              </div>
-              <div>
-                <div className="ai-prompt-preview__label">规避内容</div>
-                <pre>{filledPrompts.negativePrompt}</pre>
+                <div className="ai-prompt-preview__label">提示词</div>
+                <pre>{filledPrompt}</pre>
               </div>
             </div>
           ) : null}

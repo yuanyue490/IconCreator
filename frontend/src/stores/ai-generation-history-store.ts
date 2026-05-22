@@ -20,7 +20,8 @@ export interface AiGenerationHistorySession {
   resolution: AiImageResolution;
   aspectRatio: AiImageAspectRatio;
   prompt: string;
-  negativePrompt: string;
+  /** 旧版历史记录可能仍带有规避词 */
+  negativePrompt?: string;
   images: AiGenerationHistoryImage[];
   meta: AiGenerateResponse["meta"];
   /** 生成时选用的提示词风格（早期记录可能没有） */

@@ -13,7 +13,6 @@ const aspectRatios = ["1:1", "16:9", "9:16", "4:3", "3:4"] as [
 const aiGenerateRequestSchema = z.object({
   object: z.string().trim().min(1).max(80),
   colorPhrase: z.string().trim().min(1).max(240),
-  materialPhrase: z.string().trim().min(1).max(240),
   prompt: z.string().trim().min(1).max(3000),
   negativePrompt: z.string().trim().max(1200),
   resolution: z.enum(resolutions),

@@ -123,7 +123,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <section className="rounded-2xl bg-[#101010] p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
             <div className="mb-1 text-sm font-semibold text-[#f0f0f0]">AI 生成</div>
             <p className="text-xs leading-5 text-[#777]">
-              图标图片生成服务由服务端统一配置；分辨率、比例、主色和材质在 AI 生成面板内选择。
+              图标图片生成服务由服务端统一配置；分辨率、比例、主色在 AI 生成面板内选择。
             </p>
           </section>
 

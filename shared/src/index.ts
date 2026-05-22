@@ -14,7 +14,6 @@ export type {
   Ai3dIconStyleConfig,
   Ai3dIconStylesCatalog,
   Ai3dIconStyleVariant,
-  Ai3dMaterialPreset,
   AiGeneratedImage,
   AiGenerateRequest,
   AiGenerateResponse,

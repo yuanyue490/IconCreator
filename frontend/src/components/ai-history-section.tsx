@@ -81,7 +81,8 @@ export function AiHistorySection({ session, onDelete, onToast }: AiHistorySectio
           </div>
           <div className="match-session__meta">
             <span>
-              {session.colorLabel} / {session.materialLabel}
+              {session.colorLabel}
+              {session.materialLabel ? ` / ${session.materialLabel}` : ""}
             </span>
             {session.styleLabel ? (
               <>

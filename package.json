@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "corepack pnpm --filter @iconcraft/shared build && concurrently \"corepack pnpm --filter @iconcraft/backend dev\" \"corepack pnpm --filter @iconcraft/frontend dev\"",
-    "build": "corepack pnpm -r build",
-    "check": "corepack pnpm -r check",
+    "dev": "pnpm --filter @iconcraft/shared build && concurrently \"pnpm --filter @iconcraft/backend dev\" \"pnpm --filter @iconcraft/frontend dev\"",
+    "build": "pnpm -r build",
+    "check": "pnpm -r check",
     "catalog:names": "node scripts/generate-icon-names.mjs"
   },
   "devDependencies": {

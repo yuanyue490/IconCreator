@@ -16,15 +16,14 @@ const RESOLUTION_OPTIONS: AiImageResolution[] = ["1K", "2K", "4K"];
 const RATIO_OPTIONS: AiImageAspectRatio[] = ["1:1", "16:9", "9:16", "4:3", "3:4"];
 const CUSTOM_STYLE_ID = "__custom_prompt_style";
 const DEFAULT_CUSTOM_PROMPT =
-  "生成一个单独的「{生成物体}」三维图标，主体居中，只呈现该物体本身。整体以「{主色调}」为主色，材质体现「{材质}」。画面干净，结构清晰，适合用于产品界面。";
+  "生成一个单独的「{生成物体}」三维图标，主体居中，只呈现该物体本身。整体以「{主色调}」为主色。画面干净，结构清晰，适合用于产品界面。";
 const DEFAULT_CUSTOM_NEGATIVE =
   "不要文字、数字、水印、人物、复杂场景、多物体堆叠、低清晰度、脏污纹理";
 
-function applyStyleVars(template: Ai3dIconStyleConfig, values: { object: string; color: string; material: string }) {
+function applyStyleVars(template: Ai3dIconStyleConfig, values: { object: string; color: string }) {
   const replacements: Record<string, string> = {
     [template.vars.object]: values.object.trim() || template.vars.object,
     [template.vars.color]: values.color.trim() || template.vars.color,
-    [template.vars.material]: values.material.trim() || template.vars.material,
   };
 
   let prompt = template.prompt;
@@ -43,9 +42,7 @@ export function AiGenerateSection({
 }) {
   const [objectName, setObjectName] = useState("摄像头");
   const [selectedColorId, setSelectedColorId] = useState(presetsConfig.colors[0]?.id ?? "");
-  const [selectedMaterialId, setSelectedMaterialId] = useState(presetsConfig.materials[0]?.id ?? "");
   const [customColor, setCustomColor] = useState("");
-  const [customMaterial, setCustomMaterial] = useState("");
   const [resolution, setResolution] = useState<AiImageResolution>("2K");
   const [aspectRatio, setAspectRatio] = useState<AiImageAspectRatio>("1:1");
   const [loading, setLoading] = useState(false);
@@ -74,7 +71,6 @@ export function AiGenerateSection({
       vars: {
         object: "{生成物体}",
         color: "{主色调}",
-        material: "{材质}",
       },
       prompt: customPromptTemplate,
       negative: customNegativeTemplate,
@@ -93,16 +89,13 @@ export function AiGenerateSection({
       : "";
 
   const selectedColor = presetsConfig.colors.find((item) => item.id === selectedColorId) ?? presetsConfig.colors[0];
-  const selectedMaterial =
-    presetsConfig.materials.find((item) => item.id === selectedMaterialId) ?? presetsConfig.materials[0];
   const colorPhrase = customColor.trim() || selectedColor?.phrase || "";
-  const materialPhrase = customMaterial.trim() || selectedMaterial?.phrase || "";
   const filledPrompts = useMemo(
     () =>
       activeVariant
-        ? applyStyleVars(activeVariant, { object: objectName, color: colorPhrase, material: materialPhrase })
+        ? applyStyleVars(activeVariant, { object: objectName, color: colorPhrase })
         : { prompt: "", negativePrompt: "" },
-    [activeVariant, objectName, colorPhrase, materialPhrase],
+    [activeVariant, objectName, colorPhrase],
   );
 
   async function handleGenerate() {
@@ -110,8 +103,8 @@ export function AiGenerateSection({
       onToast("先输入要生成的物体");
       return;
     }
-    if (!colorPhrase || !materialPhrase) {
-      onToast("请选择主色和材质");
+    if (!colorPhrase) {
+      onToast("请选择主色");
       return;
     }
     if (customStyleActive && !customPromptTemplate.trim()) {
@@ -124,7 +117,6 @@ export function AiGenerateSection({
       const response = await generateAiIcons({
         object: objectName.trim(),
         colorPhrase,
-        materialPhrase,
         prompt: filledPrompts.prompt,
         negativePrompt: filledPrompts.negativePrompt,
         resolution,
@@ -141,10 +133,6 @@ export function AiGenerateSection({
         colorLabel:
           customColor.trim() ||
           presetsConfig.colors.find((c) => c.id === selectedColorId)?.label ||
-          "",
-        materialLabel:
-          customMaterial.trim() ||
-          presetsConfig.materials.find((m) => m.id === selectedMaterialId)?.label ||
           "",
         resolution,
         aspectRatio,
@@ -239,7 +227,7 @@ export function AiGenerateSection({
                       className="ai-custom-style__textarea"
                       value={customPromptTemplate}
                       onChange={(event) => setCustomPromptTemplate(event.target.value)}
-                      placeholder="可使用 {生成物体}、{主色调}、{材质}"
+                      placeholder="可使用 {生成物体}、{主色调}"
                       spellCheck={false}
                     />
                   </label>
@@ -282,32 +270,6 @@ export function AiGenerateSection({
                 placeholder="可选：自定义主色描述，会覆盖色板"
               />
             </div>
-
-            <div>
-              <div className="ai-field__label mb-2">材质</div>
-              <div className="ai-material-grid">
-                {presetsConfig.materials.map((material) => (
-                  <button
-                    key={material.id}
-                    type="button"
-                    className={`ai-material-card${selectedMaterialId === material.id ? " is-active" : ""}`}
-                    title={material.phrase}
-                    onClick={() => {
-                      setSelectedMaterialId(material.id);
-                      setCustomMaterial("");
-                    }}
-                  >
-                    <span>{material.label}</span>
-                  </button>
-                ))}
-              </div>
-              <input
-                className="field-input mt-3 text-sm"
-                value={customMaterial}
-                onChange={(event) => setCustomMaterial(event.target.value)}
-                placeholder="可选：自定义材质描述，会覆盖材质卡"
-              />
-            </div>
           </div>
 
           <aside className="ai-generate__summary">
@@ -342,8 +304,8 @@ export function AiGenerateSection({
                 <strong>2 张</strong>
               </div>
               <div className="ai-summary-line">
-                <span>预设色 / 材质</span>
-                <strong>{selectedColor?.label} / {selectedMaterial?.label}</strong>
+                <span>预设色</span>
+                <strong>{selectedColor?.label}</strong>
               </div>
               <div className="ai-summary-line">
                 <span>提示词模板</span>
@@ -434,7 +396,7 @@ export function AiGenerateSection({
         {!loading && !hasAiHistory ? (
           <div className="ai-empty-state">
             <Icon icon="lucide:sparkles" width="18" />
-            <span>选择对象、主色和材质后开始生成；结果会保留在下方历史，最多 10 组。</span>
+            <span>选择对象和主色后开始生成；结果会保留在下方历史，最多 10 组。</span>
           </div>
         ) : null}
       </section>

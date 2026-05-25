@@ -27,8 +27,6 @@ export interface Ai3dIconStyleConfig {
 export interface Ai3dIconStyleVariant extends Ai3dIconStyleConfig {
   id: string;
   label: string;
-  /** 简短说明，仅 UI 辅助 */
-  description?: string;
 }
 
 /** `shared/config/ai-3d-icon-styles.json` 根结构 */

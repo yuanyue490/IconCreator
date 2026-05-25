@@ -74,14 +74,6 @@ export function AiGenerateSection({
   const activeVariant = customStyleActive
     ? customVariant
     : stylesCatalog.styles.find((s) => s.id === selectedStyleId) ?? stylesCatalog.styles[0];
-  const activeDescription =
-    !customStyleActive &&
-    activeVariant &&
-    "description" in activeVariant &&
-    typeof activeVariant.description === "string"
-      ? activeVariant.description
-      : "";
-
   const selectedColor = presetsConfig.colors.find((item) => item.id === selectedColorId) ?? presetsConfig.colors[0];
   const colorPhrase = customColor.trim() || selectedColor?.phrase || "";
   const filledPrompt = useMemo(
@@ -188,7 +180,7 @@ export function AiGenerateSection({
                     key={variant.id}
                     type="button"
                     className={`chip${!customStyleActive && variant.id === activeVariant?.id ? " is-active" : ""}`}
-                    title={variant.description ?? variant.label}
+                    title={variant.label}
                     onClick={() => {
                       setCustomStyleActive(false);
                       setSelectedStyleId(variant.id);
@@ -206,9 +198,6 @@ export function AiGenerateSection({
                   自定义
                 </button>
               </div>
-              {activeDescription ? (
-                <p className="mt-2 text-[12px] leading-relaxed text-[#8a8a8a]">{activeDescription}</p>
-              ) : null}
               {customStyleActive ? (
                 <div className="ai-custom-style">
                   <label>

@@ -1,13 +1,13 @@
 {
   "version": 1,
   "colors": [
-    { "id": "cool-tech-blue", "label": "科技冷蓝", "phrase": "冷调科技蓝与浅灰白渐变，清透干净，偏中台与数据产品主色", "swatch": "#3b82f6" },
-    { "id": "viz-cyan-teal", "label": "大屏青绿", "phrase": "青绿到深青的电光渐变，适合数据大屏链路、指标高亮与状态流", "swatch": "#14b8a6" },
-    { "id": "command-indigo", "label": "指挥深蓝", "phrase": "深靛蓝与墨蓝递进，政企指挥舱、运维中台常用底色级强调", "swatch": "#4338ca" },
-    { "id": "mono-gray", "label": "极简黑白灰", "phrase": "高对比黑白与中性灰阶，无明显彩色倾向，适配暗色/浅色双主题", "swatch": "#a3a3a3" },
-    { "id": "slate-neutral", "label": "蓝灰中性", "phrase": "钢灰与浅钢蓝渐变，表格区、侧栏与标签页的企业后台中性色", "swatch": "#64748b" },
-    { "id": "hud-neon-cyan", "label": "暗底霓虹青", "phrase": "近黑底上以电光青作边缘光与高光线，HUD、驾驶舱式大屏点缀", "swatch": "#22d3ee" },
-    { "id": "ops-status-green", "label": "运行绿", "phrase": "低饱和松石绿配深墨绿阴影，适配正常可用、链路畅通类状态语义", "swatch": "#059669" },
-    { "id": "alert-amber", "label": "警示琥珀", "phrase": "克制琥珀橘与焦糖深棕，告警条、中风险档位与 KPI 预警信号色", "swatch": "#d97706" }
+    { "id": "cool-tech-blue", "label": "科技蓝", "phrase": "标准科技蓝", "swatch": "#1677ff" },
+    { "id": "viz-cyan-teal", "label": "工业青", "phrase": "工业青", "swatch": "#13c2c2" },
+    { "id": "command-indigo", "label": "科技绿", "phrase": "科技绿", "swatch": "#00d48b" },
+    { "id": "mono-gray", "label": "活力橙", "phrase": "活力橙", "swatch": "#fa8c16" },
+    { "id": "slate-neutral", "label": "警示红", "phrase": "警示红", "swatch": "#f5222d" },
+    { "id": "hud-neon-cyan", "label": "优雅紫", "phrase": "优雅紫", "swatch": "#722ed1" },
+    { "id": "ops-status-green", "label": "清新青", "phrase": "清新青", "swatch": "#13c2c2" },
+    { "id": "alert-amber", "label": "暖黄", "phrase": "暖黄", "swatch": "#faad14" }
   ]
 }
